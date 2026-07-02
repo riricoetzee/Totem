@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Totem — Team Selection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14201A;
+    --chalk:#EFF2ED;
+    --panel:#FFFFFF;
+    --pitch:#1F5C43;
+    --pitch-deep:#123527;
+    --pitch-light:#2E7A57;
+    --gold:#E3A62F;
+    --gold-deep:#B9840F;
+    --clay:#C1542E;
+    --slate:#5B6B63;
+    --line:#DBDFD5;
+    --line-strong:#C3C9BC;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(20,32,26,0.06), 0 6px 20px rgba(20,32,26,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--chalk);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.03em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ===== Header ===== */
+  header.top{
+    background:var(--pitch);
+    color:var(--chalk);
+    padding:22px 28px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.top::after{
+    content:"";
+    position:absolute; right:-40px; top:-60px;
+    width:220px; height:220px; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(227,166,47,0.25), transparent 70%);
+  }
+  .brand-row{display:flex; align-items:baseline; gap:14px; position:relative; z-index:1;}
+  .brand-row h1{
+    font-size:44px; margin:0; line-height:0.9;
+    font-family:'Bebas Neue',sans-serif; letter-spacing:0.04em;
+  }
+  .brand-row .totem-mark{display:flex; gap:3px; align-items:flex-end;}
+  .brand-row .totem-mark span{
+    width:7px; border-radius:2px;
+    background:var(--gold);
+  }
+  .tagline{margin:2px 0 0; font-size:13px; color:#CFE3D6; font-weight:500; letter-spacing:0.02em; position:relative; z-index:1;}
+
+  nav.sports{
+    display:flex; gap:8px; margin-top:18px; flex-wrap:wrap; position:relative; z-index:1;
+  }
+  .sport-tab{
+    display:flex; align-items:center; gap:8px;
+    padding:9px 16px; border-radius:999px;
+    background:rgba(255,255,255,0.08); color:var(--chalk);
+    border:1px solid rgba(255,255,255,0.18);
+    cursor:pointer; font-weight:600; font-size:14px;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .sport-tab:hover{background:rgba(255,255,255,0.16);}
+  .sport-tab.active{background:var(--gold); color:var(--pitch-deep); border-color:var(--gold);}
+  .sport-tab .icon{font-size:16px;}
+  .sport-tab.add{background:transparent; border-style:dashed;}
+
+  /* ===== Layout ===== */
+  main{max-width:1180px; margin:0 auto; padding:24px 28px 60px;}
+
+  .panel{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); box-shadow:var(--shadow);
+  }
+
+  .section-title{
+    display:flex; align-items:center; justify-content:space-between;
+    margin:28px 0 12px;
+  }
+  .section-title h2{
+    font-family:'Bebas Neue',sans-serif; letter-spacing:0.03em;
+    font-size:22px; margin:0; color:var(--pitch-deep);
+  }
+  .section-title .sub{font-size:12px; color:var(--slate); font-weight:500;}
+
+  /* ===== Add player form ===== */
+  .add-form{
+    padding:18px 20px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;
+  }
+  .field{display:flex; flex-direction:column; gap:5px;}
+  .field label{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate); font-weight:600;}
+  .field input, .field select{
+    border:1px solid var(--line-strong); border-radius:7px; padding:9px 10px;
+    font-size:14px; font-family:'Inter',sans-serif; background:var(--chalk);
+    min-width:120px;
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--pitch-light); outline-offset:1px;}
+  .field.grow{flex:1; min-width:160px;}
+  .btn{
+    border:none; border-radius:7px; padding:10px 18px; font-weight:700; font-size:14px;
+    cursor:pointer; font-family:'Inter',sans-serif; transition:transform .08s ease, filter .15s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--pitch); color:#fff;}
+  .btn-primary:hover{filter:brightness(1.1);}
+  .btn-ghost{background:transparent; color:var(--pitch-deep); border:1px solid var(--line-strong);}
+  .btn-ghost:hover{background:var(--chalk);}
+  .btn-danger{background:transparent; color:var(--clay); border:1px solid transparent;}
+  .btn-danger:hover{text-decoration:underline;}
+  .btn-small{padding:6px 12px; font-size:12px;}
+
+  /* ===== Filters ===== */
+  .filters{display:flex; gap:10px; align-items:center; margin:14px 0; flex-wrap:wrap;}
+  .filters select{
+    border:1px solid var(--line-strong); border-radius:999px; padding:7px 14px;
+    font-size:13px; background:var(--panel); font-weight:500;
+  }
+  .count-chip{
+    margin-left:auto; font-size:12px; color:var(--slate); font-weight:600;
+  }
+
+  /* ===== Roster grid ===== */
+  .roster-empty{
+    padding:50px 20px; text-align:center; color:var(--slate);
+  }
+  .roster-empty .glyph{font-size:34px; display:block; margin-bottom:10px;}
+  .roster-empty h3{margin:0 0 6px; color:var(--pitch-deep); font-family:'Bebas Neue',sans-serif; letter-spacing:0.03em; font-size:20px;}
+
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:14px;
+  }
+
+  .player-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; position:relative; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .player-card.pick{
+    border-color:var(--gold);
+    box-shadow:0 0 0 2px rgba(227,166,47,0.35), var(--shadow);
+  }
+  .pick-badge{
+    position:absolute; top:-9px; right:12px;
+    background:var(--gold); color:var(--pitch-deep);
+    font-size:10px; font-weight:800; letter-spacing:0.05em;
+    padding:3px 9px; border-radius:999px; text-transform:uppercase;
+    box-shadow:0 2px 6px rgba(0,0,0,0.15);
+  }
+  .card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .card-head .name{font-size:17px; font-weight:700; margin:0;}
+  .card-head .meta{font-size:12px; color:var(--slate); margin-top:2px;}
+  .badge-row{display:flex; gap:6px; flex-wrap:wrap;}
+  .badge{
+    font-size:11px; font-weight:700; padding:3px 8px; border-radius:999px;
+    background:var(--chalk); color:var(--pitch-deep); border:1px solid var(--line);
+  }
+
+  .card-body{display:flex; gap:14px; align-items:center;}
+  .totem-mini{display:flex; gap:3px; align-items:flex-end; height:54px;}
+  .totem-mini .blk{width:9px; border-radius:2px;}
+  .score-box{display:flex; flex-direction:column; align-items:flex-start;}
+  .score-box .val{font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:700; color:var(--pitch-deep); line-height:1;}
+  .score-box .lbl{font-size:10px; color:var(--slate); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px;}
+
+  .card-actions{display:flex; gap:8px; margin-top:auto;}
+
+  /* expanded metrics */
+  .metrics-panel{
+    border-top:1px dashed var(--line); padding-top:12px; display:flex; flex-direction:column; gap:10px;
+  }
+  .metric-row{display:flex; align-items:center; gap:10px;}
+  .metric-row .m-label{font-size:12px; width:92px; flex-shrink:0; color:var(--slate); font-weight:600;}
+  .metric-row input[type=range]{flex:1; accent-color:var(--pitch);}
+  .metric-row .m-val{font-family:'JetBrains Mono',monospace; font-size:13px; width:22px; text-align:right; font-weight:700; color:var(--pitch-deep);}
+
+  /* ===== Top picks panel ===== */
+  .picks-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px;}
+  .pick-card{
+    background:var(--pitch-deep); color:var(--chalk); border-radius:var(--radius);
+    padding:14px 16px; position:relative; overflow:hidden;
+  }
+  .pick-card::before{
+    content:""; position:absolute; right:-20px; bottom:-30px; width:110px; height:110px;
+    border-radius:50%; background:radial-gradient(circle, rgba(227,166,47,0.25), transparent 70%);
+  }
+  .pick-card .pos{font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold); font-weight:800;}
+  .pick-card .pname{font-size:19px; font-weight:700; margin:3px 0 2px;}
+  .pick-card .page{font-size:12px; color:#CFE3D6;}
+  .pick-card .pscore{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; margin-top:8px; color:var(--gold);}
+
+  /* ===== Settings / metric fields ===== */
+  .settings-toggle{
+    display:flex; align-items:center; gap:6px; font-size:12px; color:var(--slate);
+    background:transparent; border:none; cursor:pointer; font-weight:600; padding:4px 0;
+  }
+  .settings-toggle:hover{color:var(--pitch-deep);}
+  .metric-manager{padding:16px 20px; display:none; flex-direction:column; gap:10px;}
+  .metric-manager.open{display:flex;}
+  .metric-manager-row{display:flex; gap:8px; align-items:center;}
+  .metric-manager-row input{
+    flex:1; border:1px solid var(--line-strong); border-radius:7px; padding:7px 10px; font-size:13px;
+  }
+
+  /* ===== Modal ===== */
+  .overlay{
+    position:fixed; inset:0; background:rgba(20,32,26,0.45);
+    display:none; align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--panel); border-radius:var(--radius); padding:22px; width:100%; max-width:380px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.25);
+  }
+  .modal h3{margin:0 0 14px; font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.03em; color:var(--pitch-deep);}
+  .modal .field{width:100%; margin-bottom:12px;}
+  .modal .field input{width:100%;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:8px;}
+
+  footer.note{text-align:center; color:var(--slate); font-size:11px; margin-top:36px;}
+
+  @media (max-width:600px){
+    header.top{padding:18px 16px;}
+    main{padding:18px 16px 40px;}
+    .add-form{flex-direction:column; align-items:stretch;}
+    .field.grow{min-width:0;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand-row">
+    <div class="totem-mark">
+      <span style="height:10px;"></span>
+      <span style="height:16px;"></span>
+      <span style="height:22px;"></span>
+      <span style="height:28px;"></span>
+    </div>
+    <h1>TOTEM</h1>
+  </div>
+  <p class="tagline">Build your team, block by block.</p>
+  <nav class="sports" id="sportTabs"></nav>
+</header>
+
+<main>
+
+  <div class="panel add-form" id="addForm">
+    <div class="field grow">
+      <label>Player name</label>
+      <input type="text" id="inName" placeholder="e.g. Amahle Dlamini">
+    </div>
+    <div class="field">
+      <label>Age</label>
+      <input type="number" id="inAge" min="5" max="60" placeholder="16" style="width:80px;">
+    </div>
+    <div class="field">
+      <label>Position</label>
+      <select id="inPosition"></select>
+    </div>
+    <button class="btn btn-primary" id="btnAddPlayer">+ Add player</button>
+  </div>
+
+  <div class="section-title">
+    <h2>Metric fields</h2>
+    <button class="settings-toggle" id="toggleMetrics">⚙ manage fields</button>
+  </div>
+  <div class="panel metric-manager" id="metricManager">
+    <div id="metricFieldList"></div>
+    <div class="metric-manager-row">
+      <input type="text" id="newFieldName" placeholder="Add a new metric, e.g. Endurance">
+      <button class="btn btn-ghost btn-small" id="btnAddField">Add field</button>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <h2 id="rosterTitle">Roster</h2>
+    <span class="sub">tap a card to rate</span>
+  </div>
+
+  <div class="filters">
+    <select id="filterAge">
+      <option value="">All ages</option>
+    </select>
+    <select id="filterPosition">
+      <option value="">All positions</option>
+    </select>
+    <span class="count-chip" id="rosterCount"></span>
+  </div>
+
+  <div id="rosterGrid" class="grid"></div>
+
+  <div class="section-title">
+    <h2>Totem picks</h2>
+    <span class="sub">best-rated player per position &amp; age group</span>
+  </div>
+  <div id="picksGrid" class="picks-grid"></div>
+
+  <footer class="note">Totem stores your roster locally to this app. Ratings are out of 10 per metric.</footer>
+</main>
+
+<div class="overlay" id="sportModal">
+  <div class="modal">
+    <h3>Add a sport</h3>
+    <div class="field">
+      <label>Sport name</label>
+      <input type="text" id="newSportName" placeholder="e.g. Rugby">
+    </div>
+    <div class="field">
+      <label>Positions (comma separated)</label>
+      <input type="text" id="newSportPositions" placeholder="e.g. Prop, Hooker, Fly-half">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-small" id="cancelSport">Cancel</button>
+      <button class="btn btn-primary btn-small" id="confirmSport">Add sport</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- default data ----------
+  const DEFAULT_SPORTS = [
+    { id:"netball", name:"Netball", icon:"🏐", positions:["GS","GA","WA","C","WD","GD","GK"] },
+    { id:"hockey", name:"Field Hockey", icon:"🏑", positions:["Goalkeeper","Defender","Midfielder","Forward"] },
+    { id:"swimming", name:"Swimming", icon:"🏊", positions:["Freestyle","Backstroke","Breaststroke","Butterfly","Individual Medley"] }
+  ];
+  const DEFAULT_FIELDS = [
+    {key:"fitness", label:"Fitness"},
+    {key:"skill", label:"Skill"},
+    {key:"speed", label:"Speed"},
+    {key:"strength", label:"Strength"},
+    {key:"agility", label:"Agility"},
+    {key:"reliability", label:"Reliability"},
+    {key:"teamSpirit", label:"Team Spirit"}
+  ];
+
+  let state = {
+    sports: JSON.parse(JSON.stringify(DEFAULT_SPORTS)),
+    metricFields: JSON.parse(JSON.stringify(DEFAULT_FIELDS)),
+    players: [],
+    activeSport: "netball"
+  };
+
+  let expandedPlayerId = null;
+  let storageReady = false;
+
+  // ---------- storage ----------
+  async function loadState(){
+    try{
+      const res = await window.storage.get("totem-data", false);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        state = Object.assign(state, parsed);
+      }
+    }catch(e){
+      // no saved data yet, or storage unavailable — start fresh in memory
+    }
+    storageReady = true;
+    render();
+  }
+  async function saveState(){
+    try{
+      await window.storage.set("totem-data", JSON.stringify(state), false);
+    }catch(e){
+      // storage unavailable — app still works for this session
+      console.warn("Totem: could not save (storage unavailable this session).");
+    }
+  }
+
+  // ---------- helpers ----------
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+  function ageGroup(age){
+    if(age <= 12) return "U12";
+    if(age <= 15) return "U15";
+    if(age <= 18) return "U18";
+    return "Senior";
+  }
+  function currentSport(){
+    return state.sports.find(s => s.id === state.activeSport) || state.sports[0];
+  }
+  function playersForSport(sportId){
+    return state.players.filter(p => p.sportId === sportId);
+  }
+  function overallScore(player){
+    const fields = state.metricFields;
+    if(fields.length === 0) return 0;
+    let sum = 0;
+    fields.forEach(f => { sum += (player.metrics[f.key] ?? 5); });
+    return sum / fields.length;
+  }
+  function colorForScore(score){
+    // 0 -> pale chalk-green, 10 -> deep pitch
+    const t = Math.max(0, Math.min(10, score)) / 10;
+    const lightness = 88 - t * 58; // 88% -> 30%
+    return `hsl(152, 32%, ${lightness}%)`;
+  }
+  function computeTopPicks(sportId){
+    const players = playersForSport(sportId);
+    const map = {}; // key: position|ageGroup -> best player
+    players.forEach(p => {
+      const key = p.position + "|" + ageGroup(p.age);
+      const score = overallScore(p);
+      if(!map[key] || score > map[key].score ||
+        (score === map[key].score && (p.metrics.reliability ?? 0) > (map[key].player.metrics.reliability ?? 0))){
+        map[key] = { player:p, score };
+      }
+    });
+    return map;
+  }
+
+  // ---------- rendering ----------
+  function renderSportTabs(){
+    const nav = document.getElementById("sportTabs");
+    nav.innerHTML = "";
+    state.sports.forEach(s => {
+      const btn = document.createElement("button");
+      btn.className = "sport-tab" + (s.id === state.activeSport ? " active" : "");
+      btn.innerHTML = `<span class="icon">${s.icon || "🏅"}</span><span>${escapeHtml(s.name)}</span>`;
+      btn.addEventListener("click", () => { state.activeSport = s.id; expandedPlayerId = null; render(); });
+      nav.appendChild(btn);
+    });
+    const addBtn = document.createElement("button");
+    addBtn.className = "sport-tab add";
+    addBtn.textContent = "+ Add sport";
+    addBtn.addEventListener("click", openSportModal);
+    nav.appendChild(addBtn);
+  }
+
+  function renderPositionSelect(){
+    const sel = document.getElementById("inPosition");
+    const sport = currentSport();
+    sel.innerHTML = sport.positions.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+  }
+
+  function renderFilters(){
+    const sport = currentSport();
+    const players = playersForSport(sport.id);
+
+    const ageSel = document.getElementById("filterAge");
+    const groups = ["U12","U15","U18","Senior"].filter(g => players.some(p => ageGroup(p.age) === g));
+    const currentAgeVal = ageSel.value;
+    ageSel.innerHTML = `<option value="">All ages</option>` + groups.map(g => `<option value="${g}">${g}</option>`).join("");
+    ageSel.value = groups.includes(currentAgeVal) ? currentAgeVal : "";
+
+    const posSel = document.getElementById("filterPosition");
+    const currentPosVal = posSel.value;
+    posSel.innerHTML = `<option value="">All positions</option>` + sport.positions.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+    posSel.value = sport.positions.includes(currentPosVal) ? currentPosVal : "";
+  }
+
+  function renderMetricManager(){
+    const list = document.getElementById("metricFieldList");
+    list.innerHTML = "";
+    state.metricFields.forEach((f, idx) => {
+      const row = document.createElement("div");
+      row.className = "metric-manager-row";
+      row.innerHTML = `
+        <input type="text" data-idx="${idx}" class="field-rename" value="${escapeHtml(f.label)}">
+        <button class="btn btn-danger btn-small" data-idx="${idx}" data-action="remove-field">Remove</button>
+      `;
+      list.appendChild(row);
+    });
+    list.querySelectorAll(".field-rename").forEach(inp => {
+      inp.addEventListener("change", (e) => {
+        const idx = +e.target.dataset.idx;
+        state.metricFields[idx].label = e.target.value.trim() || state.metricFields[idx].label;
+        saveState(); render();
+      });
+    });
+    list.querySelectorAll('[data-action="remove-field"]').forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const idx = +e.target.dataset.idx;
+        if(state.metricFields.length <= 1){ alert("Keep at least one metric field."); return; }
+        state.metricFields.splice(idx,1);
+        saveState(); render();
+      });
+    });
+  }
+
+  function totemBlocks(player, size){
+    // size: "mini" or "full"
+    const fields = state.metricFields;
+    const height = size === "mini" ? 54 : 120;
+    const width = size === "mini" ? 9 : 26;
+    return fields.map(f => {
+      const val = player.metrics[f.key] ?? 5;
+      const h = Math.max(6, (val/10) * height);
+      const bg = colorForScore(val);
+      const label = size === "mini" ? "" : `<div style="font-size:9px;color:var(--slate);margin-top:3px;text-align:center;width:${width}px;">${f.label.slice(0,4)}</div>`;
+      return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;">
+                <div class="blk" style="width:${width}px;height:${h}px;background:${bg};border-radius:3px;"></div>
+                ${label}
+              </div>`;
+    }).join("");
+  }
+
+  function renderRoster(){
+    const sport = currentSport();
+    document.getElementById("rosterTitle").textContent = sport.name + " roster";
+    const ageFilter = document.getElementById("filterAge").value;
+    const posFilter = document.getElementById("filterPosition").value;
+
+    let players = playersForSport(sport.id);
+    if(ageFilter) players = players.filter(p => ageGroup(p.age) === ageFilter);
+    if(posFilter) players = players.filter(p => p.position === posFilter);
+
+    document.getElementById("rosterCount").textContent = players.length + (players.length === 1 ? " player" : " players");
+
+    const picks = computeTopPicks(sport.id);
+    const pickIds = new Set(Object.values(picks).map(v => v.player.id));
+
+    const grid = document.getElementById("rosterGrid");
+    grid.innerHTML = "";
+
+    if(players.length === 0){
+      grid.innerHTML = `<div class="roster-empty" style="grid-column:1/-1;">
+        <span class="glyph">🪵</span>
+        <h3>No players yet</h3>
+        <div>Add your first ${escapeHtml(sport.name.toLowerCase())} player above to start building the totem.</div>
+      </div>`;
+      return;
+    }
+
+    players
+      .slice()
+      .sort((a,b) => overallScore(b) - overallScore(a))
+      .forEach(p => {
+        const score = overallScore(p);
+        const isPick = pickIds.has(p.id);
+        const card = document.createElement("div");
+        card.className = "player-card" + (isPick ? " pick" : "");
+        const expanded = expandedPlayerId === p.id;
+
+        card.innerHTML = `
+          ${isPick ? `<div class="pick-badge">Totem Pick</div>` : ""}
+          <div class="card-head">
+            <div>
+              <p class="name">${escapeHtml(p.name)}</p>
+              <div class="meta">Age ${p.age} · ${ageGroup(p.age)}</div>
+            </div>
+          </div>
+          <div class="badge-row">
+            <span class="badge">${escapeHtml(p.position)}</span>
+          </div>
+          <div class="card-body">
+            <div class="totem-mini">${totemBlocks(p, "mini")}</div>
+            <div class="score-box">
+              <div class="val">${score.toFixed(1)}</div>
+              <div class="lbl">overall</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-ghost btn-small" data-action="toggle" data-id="${p.id}">${expanded ? "Hide ratings" : "Rate player"}</button>
+            <button class="btn btn-danger btn-small" data-action="delete" data-id="${p.id}" style="margin-left:auto;">Remove</button>
+          </div>
+          ${expanded ? renderMetricsPanel(p) : ""}
+        `;
+        grid.appendChild(card);
+      });
+
+    grid.querySelectorAll('[data-action="toggle"]').forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const id = e.target.dataset.id;
+        expandedPlayerId = expandedPlayerId === id ? null : id;
+        render();
+      });
+    });
+    grid.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const id = e.target.dataset.id;
+        const p = state.players.find(pl => pl.id === id);
+        if(p && confirm(`Remove ${p.name} from the roster?`)){
+          state.players = state.players.filter(pl => pl.id !== id);
+          saveState(); render();
+        }
+      });
+    });
+    grid.querySelectorAll('input[type="range"]').forEach(inp => {
+      inp.addEventListener("input", (e) => {
+        const id = e.target.dataset.id;
+        const key = e.target.dataset.key;
+        const p = state.players.find(pl => pl.id === id);
+        p.metrics[key] = +e.target.value;
+        const valSpan = e.target.parentElement.querySelector(".m-val");
+        if(valSpan) valSpan.textContent = e.target.value;
+        // live-update this card's mini totem + score without full re-render for smoothness
+        updateCardLive(p);
+      });
+      inp.addEventListener("change", () => saveState());
+    });
+  }
+
+  function updateCardLive(p){
+    const score = overallScore(p);
+    document.querySelectorAll(".player-card").forEach(card => {
+      const nameEl = card.querySelector(".name");
+      if(nameEl && nameEl.textContent === p.name){
+        const valEl = card.querySelector(".score-box .val");
+        if(valEl) valEl.textContent = score.toFixed(1);
+        const mini = card.querySelector(".totem-mini");
+        if(mini) mini.innerHTML = totemBlocks(p, "mini");
+      }
+    });
+  }
+
+  function renderMetricsPanel(p){
+    const rows = state.metricFields.map(f => {
+      const val = p.metrics[f.key] ?? 5;
+      return `
+        <div class="metric-row">
+          <div class="m-label">${escapeHtml(f.label)}</div>
+          <input type="range" min="0" max="10" step="1" value="${val}" data-id="${p.id}" data-key="${f.key}">
+          <div class="m-val">${val}</div>
+        </div>`;
+    }).join("");
+    return `<div class="metrics-panel">${rows}</div>`;
+  }
+
+  function renderTopPicks(){
+    const sport = currentSport();
+    const picks = computeTopPicks(sport.id);
+    const grid = document.getElementById("picksGrid");
+    grid.innerHTML = "";
+
+    const entries = Object.values(picks).sort((a,b) => {
+      const posA = sport.positions.indexOf(a.player.position);
+      const posB = sport.positions.indexOf(b.player.position);
+      if(posA !== posB) return posA - posB;
+      return a.player.name.localeCompare(b.player.name);
+    });
+
+    if(entries.length === 0){
+      grid.innerHTML = `<div class="roster-empty" style="grid-column:1/-1;">
+        <span class="glyph">🏆</span>
+        <h3>No picks yet</h3>
+        <div>Rate a few players and Totem will surface the strongest choice per position and age group.</div>
+      </div>`;
+      return;
+    }
+
+    entries.forEach(({player, score}) => {
+      const div = document.createElement("div");
+      div.className = "pick-card";
+      div.innerHTML = `
+        <div class="pos">${escapeHtml(player.position)}</div>
+        <div class="pname">${escapeHtml(player.name)}</div>
+        <div class="page">${ageGroup(player.age)} · Age ${player.age}</div>
+        <div class="pscore">${score.toFixed(1)}</div>
+      `;
+      grid.appendChild(div);
+    });
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, ch => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[ch]));
+  }
+
+  function render(){
+    renderSportTabs();
+    renderPositionSelect();
+    renderFilters();
+    renderMetricManager();
+    renderRoster();
+    renderTopPicks();
+  }
+
+  // ---------- events ----------
+  document.getElementById("btnAddPlayer").addEventListener("click", () => {
+    const nameInp = document.getElementById("inName");
+    const ageInp = document.getElementById("inAge");
+    const posSel = document.getElementById("inPosition");
+    const name = nameInp.value.trim();
+    const age = +ageInp.value;
+    const position = posSel.value;
+
+    if(!name){ alert("Enter a player name."); nameInp.focus(); return; }
+    if(!age || age < 4 || age > 90){ alert("Enter a valid age."); ageInp.focus(); return; }
+
+    const metrics = {};
+    state.metricFields.forEach(f => metrics[f.key] = 5);
+
+    state.players.push({
+      id: uid(),
+      sportId: state.activeSport,
+      name, age, position,
+      metrics
+    });
+    nameInp.value = ""; ageInp.value = "";
+    saveState(); render();
+  });
+
+  document.getElementById("filterAge").addEventListener("change", render);
+  document.getElementById("filterPosition").addEventListener("change", render);
+
+  document.getElementById("toggleMetrics").addEventListener("click", () => {
+    document.getElementById("metricManager").classList.toggle("open");
+  });
+
+  document.getElementById("btnAddField").addEventListener("click", () => {
+    const inp = document.getElementById("newFieldName");
+    const label = inp.value.trim();
+    if(!label) return;
+    const key = "f_" + uid();
+    state.metricFields.push({key, label});
+    state.players.forEach(p => { p.metrics[key] = 5; });
+    inp.value = "";
+    saveState(); render();
+  });
+
+  function openSportModal(){
+    document.getElementById("sportModal").classList.add("open");
+    document.getElementById("newSportName").value = "";
+    document.getElementById("newSportPositions").value = "";
+  }
+  document.getElementById("cancelSport").addEventListener("click", () => {
+    document.getElementById("sportModal").classList.remove("open");
+  });
+  document.getElementById("confirmSport").addEventListener("click", () => {
+    const name = document.getElementById("newSportName").value.trim();
+    const posRaw = document.getElementById("newSportPositions").value.trim();
+    if(!name){ alert("Enter a sport name."); return; }
+    const positions = posRaw ? posRaw.split(",").map(s => s.trim()).filter(Boolean) : ["Player"];
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-" + uid().slice(0,4);
+    state.sports.push({ id, name, icon:"🏅", positions });
+    state.activeSport = id;
+    document.getElementById("sportModal").classList.remove("open");
+    saveState(); render();
+  });
+  document.getElementById("sportModal").addEventListener("click", (e) => {
+    if(e.target.id === "sportModal") document.getElementById("sportModal").classList.remove("open");
+  });
+
+  loadState();
+})();
+</script>
+</body>
+</html>
