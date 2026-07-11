@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Totem™ — Team Selection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="auth-shell" id="authShell">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="totem-mark">
+        <span style="height:10px;"></span>
+        <span style="height:16px;"></span>
+        <span style="height:22px;"></span>
+        <span style="height:28px;"></span>
+      </div>
+      <h1>TOTEM<sup class="tm">™</sup></h1>
+    </div>
+    <p class="auth-tagline">Sign in to your club account</p>
+    <div id="authError" class="auth-error" style="display:none;"></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="authEmail" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="authPassword" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" id="btnLogin" style="width:100%;">Log in</button>
+    <p class="auth-hint">Accounts are created by your club admin — contact them if you don't have one yet.</p>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
+<header class="top">
+  <div class="header-account" id="headerAccount" style="display:none;">
+    <span id="headerAccountEmail"></span>
+    <button type="button" id="btnLogout">Log out</button>
+  </div>
+  <div class="brand-row">
+    <div class="totem-mark">
+      <span style="height:10px;"></span>
+      <span style="height:16px;"></span>
+      <span style="height:22px;"></span>
+      <span style="height:28px;"></span>
+    </div>
+    <h1>TOTEM<sup class="tm">™</sup></h1>
+  </div>
+  <p class="tagline">Build your team, block by block.</p>
+  <nav class="sports" id="sportTabs"></nav>
+</header>
+
+<nav class="quicknav" id="quicknav">
+  <button type="button" data-target="sec-roster">Roster</button>
+  <button type="button" data-target="sec-picks">Picks</button>
+  <button type="button" data-target="sec-sides">Sides</button>
+  <button type="button" data-target="sec-fixtures">Fixtures</button>
+  <button type="button" data-target="sec-results">Results</button>
+  <button type="button" data-target="sec-coaches">Coaches</button>
+  <button type="button" data-target="sec-leaderboard">Leaderboard</button>
+</nav>
+
+<main>
+
+  <div class="panel add-form" id="addForm">
+    <div class="field grow">
+      <label>Player name</label>
+      <input type="text" id="inName" placeholder="e.g. Amahle Dlamini">
+    </div>
+    <div class="field">
+      <label>Date of birth</label>
+      <input type="date" id="inDob" style="width:150px;">
+    </div>
+    <div class="field" id="inPositionField">
+      <label id="inPositionLabel">Position</label>
+      <select id="inPosition"></select>
+    </div>
+    <div class="field grow" id="inPositionsMultiField" style="display:none;">
+      <label id="inPositionsMultiLabel">Events</label>
+      <div class="multiselect" id="inPositionsMultiWrap">
+        <button type="button" class="multiselect-toggle" id="inPositionsMultiToggle">Select events ▾</button>
+        <div class="multiselect-panel" id="inPositionsMulti"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btnAddPlayer">+ Add player</button>
+  </div>
+  <p class="dob-hint">Age group is based on the age a player turns during this calendar year — e.g. anyone turning 9 this year plays U9, whether or not their birthday has happened yet.</p>
+
+  <div class="section-title">
+    <h2>Metric fields</h2>
+    <button class="settings-toggle" id="toggleMetrics">⚙ manage fields</button>
+  </div>
+  <div class="panel metric-manager" id="metricManager">
+    <div id="metricFieldList"></div>
+    <div class="metric-manager-row">
+      <input type="text" id="newFieldName" placeholder="Add a new metric, e.g. Endurance">
+      <button class="btn btn-ghost btn-small" id="btnAddField">Add field</button>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <h2 id="positionsTitle">Positions</h2>
+    <button class="settings-toggle" id="togglePositions">⚙ manage positions</button>
+  </div>
+  <div class="panel metric-manager" id="positionsManager">
+    <div class="field" id="positionsAgeGroupField" style="display:none; margin-bottom:10px;">
+      <label id="positionsAgeGroupLabel">Age group</label>
+      <select id="positionsAgeGroupSelect" style="width:110px;"></select>
+    </div>
+    <div id="positionFieldList"></div>
+    <div class="metric-manager-row">
+      <input type="text" id="newPositionName" placeholder="Add a new position">
+      <button class="btn btn-ghost btn-small" id="btnAddPosition">Add</button>
+    </div>
+  </div>
+
+  <div class="section-title" id="sec-coaches">
+    <h2>Head coaches</h2>
+    <span class="sub">one coach per age group</span>
+  </div>
+  <div class="panel add-form" id="coachAddForm">
+    <div class="field">
+      <label>Age group</label>
+      <select id="inCoachAgeGroup" style="width:110px;"></select>
+    </div>
+    <div class="field grow">
+      <label>Coach name</label>
+      <input type="text" id="inCoachName" placeholder="e.g. Thabo Nkosi">
+    </div>
+    <div class="field grow">
+      <label>Email (required)</label>
+      <input type="email" id="inCoachEmail" placeholder="coach@club.com">
+    </div>
+    <div class="field">
+      <label>Cellphone (optional)</label>
+      <input type="tel" id="inCoachPhone" placeholder="082 123 4567">
+    </div>
+    <button class="btn btn-primary" id="btnAddCoach">+ Assign coach</button>
+  </div>
+  <div id="coachGrid" class="picks-grid"></div>
+
+  <div class="section-title" id="sec-roster">
+    <h2 id="rosterTitle">Roster</h2>
+    <span class="sub">tap a card to rate</span>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="filterSearch" placeholder="Search by name…" class="roster-search">
+    <select id="filterAge">
+      <option value="">All ages</option>
+    </select>
+    <select id="filterPosition">
+      <option value="">All positions</option>
+    </select>
+    <span class="count-chip" id="rosterCount"></span>
+  </div>
+
+  <div id="rosterGrid" class="grid"></div>
+
+  <div class="section-title" id="sec-picks">
+    <h2>Totem picks</h2>
+    <span class="sub" id="picksSub">best-rated player per position &amp; age group</span>
+  </div>
+  <div id="picksGrid" class="picks-grid"></div>
+
+  <div class="section-title" id="sec-sides">
+    <h2>Team sides</h2>
+    <span class="sub" id="sidesSub">players ranked into A–E sides by position &amp; age group</span>
+  </div>
+  <div class="sides-tabs" id="sidesAgeTabs"></div>
+  <div class="coach-banner" id="sidesCoachBanner"></div>
+  <div id="sidesBoard" class="sides-board"></div>
+
+  <div class="section-title" id="sec-fixtures">
+    <h2>Fixtures calendar</h2>
+    <span class="sub" id="fixturesSub">plan matches &amp; auto-build the best team per age group</span>
+  </div>
+  <div class="panel fixtures-panel">
+    <div class="calendar-head">
+      <button class="btn btn-ghost btn-small" id="calPrev">‹</button>
+      <div class="calendar-title" id="calTitle"></div>
+      <button class="btn btn-ghost btn-small" id="calNext">›</button>
+      <button class="btn btn-primary btn-small" id="btnAddFixture" style="margin-left:auto;">+ Add fixture</button>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+
+  <div id="fixtureList" class="fixture-list"></div>
+  <div id="fixtureDetail"></div>
+
+  <div class="section-title" id="sec-results">
+    <h2>Results &amp; stats</h2>
+    <span class="sub">season record, top scorers &amp; personal bests</span>
+  </div>
+  <div class="sides-tabs" id="dashAgeTabs"></div>
+  <div id="dashBody"></div>
+
+  <div class="section-title" id="sec-leaderboard">
+    <h2>Coach leaderboard</h2>
+    <span class="sub">win rate across every team sport &amp; age group, club-wide</span>
+  </div>
+  <div id="coachLeaderboard"></div>
+
+  <footer class="note">
+    Totem stores your roster locally to this app. Ratings are out of 10 per metric.
+    <span class="legal">Totem™ is a trademark of D.S.Blom. All rights reserved.</span>
+  </footer>
+</main>
+
+<button class="back-to-top" id="backToTop" title="Back to top" type="button">↑</button>
+
+<div class="overlay" id="fixtureModal">
+  <div class="modal modal-wide">
+    <h3 id="fixtureModalTitle">Add a fixture</h3>
+    <div class="field" id="fxTypeField" style="display:none;">
+      <label>Type</label>
+      <div class="chip-check-row">
+        <label class="chip-check"><input type="radio" name="fxType" value="match" checked><span>Match (vs opponent)</span></label>
+        <label class="chip-check"><input type="radio" name="fxType" value="trial"><span>Trial (time trial)</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="fxDate">
+    </div>
+    <div class="field grow">
+      <label id="fxOpponentLabel">Opponent</label>
+      <input type="text" id="fxOpponent" placeholder="e.g. St Mary's">
+    </div>
+    <div class="field">
+      <label>Venue (optional)</label>
+      <input type="text" id="fxVenue" placeholder="Home / Away / Ground name">
+    </div>
+    <div class="field">
+      <label id="fxAgeGroupsLabel">Age groups &amp; sides playing</label>
+      <div id="fxAgeGroups" class="fx-groups"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-small" id="cancelFixture">Cancel</button>
+      <button class="btn btn-primary btn-small" id="confirmFixture">Save fixture</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="resultModal">
+  <div class="modal modal-wide">
+    <h3 id="resultModalTitle">Capture result</h3>
+    <div id="resultModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-small" id="cancelResult">Cancel</button>
+      <button class="btn btn-primary btn-small" id="confirmResult">Save result</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="trialResultModal">
+  <div class="modal modal-wide">
+    <h3 id="trialResultModalTitle">Capture trial results</h3>
+    <div id="trialResultModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-small" id="cancelTrialResult">Cancel</button>
+      <button class="btn btn-primary btn-small" id="confirmTrialResult">Save results</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="sportModal">
+  <div class="modal">
+    <h3>Add a sport</h3>
+    <div class="field">
+      <label>Sport name</label>
+      <input type="text" id="newSportName" placeholder="e.g. Rugby">
+    </div>
+    <div class="field">
+      <label id="newSportPositionsLabel">Positions (comma separated)</label>
+      <input type="text" id="newSportPositions" placeholder="e.g. Prop, Hooker, Fly-half">
+    </div>
+    <div class="field">
+      <label>Sport type</label>
+      <div class="chip-check-row">
+        <label class="chip-check"><input type="radio" name="newSportType" value="team" checked><span>Team (score-based)</span></label>
+        <label class="chip-check"><input type="radio" name="newSportType" value="individual"><span>Individual (times/places)</span></label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-small" id="cancelSport">Cancel</button>
+      <button class="btn btn-primary btn-small" id="confirmSport">Add sport</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</div><!-- /#appRoot -->
+</body>
+</html>
