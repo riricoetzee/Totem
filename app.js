@@ -2346,7 +2346,7 @@
     win.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(title)}</title>
       <style>
         body{font-family:Arial,Helvetica,sans-serif; padding:32px; color:#14201A;}
-        .print-logo{width:200px; height:auto; display:block; margin:0 auto 22px; padding-bottom:18px; border-bottom:2px solid #14201A;}
+        .print-logo{height:40px; width:auto; display:block; margin:0 0 22px; padding-bottom:14px; border-bottom:2px solid #14201A;}
         h1{font-size:22px; margin:0 0 2px;}
         .sub{color:#5B6B63; font-size:13px; margin-bottom:6px;}
         .coach-line{color:#14201A; font-size:13px; font-weight:700; margin-bottom:18px;}
@@ -2423,7 +2423,7 @@
     win.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(sport.name)} — ${escapeHtml(label)} result</title>
       <style>
         body{font-family:Arial,Helvetica,sans-serif; padding:32px; color:#14201A;}
-        .print-logo{width:200px; height:auto; display:block; margin:0 auto 22px; padding-bottom:18px; border-bottom:2px solid #14201A;}
+        .print-logo{height:40px; width:auto; display:block; margin:0 0 22px; padding-bottom:14px; border-bottom:2px solid #14201A;}
         h1{font-size:22px; margin:0 0 2px;}
         .sub{color:#5B6B63; font-size:13px; margin-bottom:6px;}
         .coach-line{font-size:13px; font-weight:700; margin-bottom:18px;}
@@ -2519,7 +2519,7 @@
     win.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(sport.name)} — ${escapeHtml(group)} season summary</title>
       <style>
         body{font-family:Arial,Helvetica,sans-serif; padding:32px; color:#14201A;}
-        .print-logo{width:200px; height:auto; display:block; margin:0 auto 22px; padding-bottom:18px; border-bottom:2px solid #14201A;}
+        .print-logo{height:40px; width:auto; display:block; margin:0 0 22px; padding-bottom:14px; border-bottom:2px solid #14201A;}
         h1{font-size:22px; margin:0 0 2px;}
         h2{font-size:15px; margin:26px 0 8px;}
         .sub{color:#5B6B63; font-size:13px; margin-bottom:6px;}
