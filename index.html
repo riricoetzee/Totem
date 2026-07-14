@@ -34,6 +34,13 @@
       <label>Club / school / team name</label>
       <input type="text" id="authOrgName" placeholder="e.g. Riverside Primary">
     </div>
+    <div class="field" id="orgTypeField" style="display:none;">
+      <label>What best describes you?</label>
+      <div class="chip-check-row">
+        <label class="chip-check"><input type="radio" name="authOrgType" value="club" checked><span>Club or single team</span></label>
+        <label class="chip-check"><input type="radio" name="authOrgType" value="school"><span>School (multiple teams/sports)</span></label>
+      </div>
+    </div>
     <div class="field" id="inviteCodeField" style="display:none;">
       <label>Invite code</label>
       <input type="text" id="authInviteCode" placeholder="8-character code from your club admin">
@@ -57,7 +64,7 @@
   <div class="header-account" id="headerAccount" style="display:none;">
     <span id="headerAccountEmail"></span>
     <button type="button" id="btnInviteStaff" style="display:none;">Invite staff</button>
-    <button type="button" id="btnRenameClub" style="display:none;">Rename club</button>
+    <button type="button" id="btnRenameClub" style="display:none;">Club settings</button>
     <button type="button" id="btnLogout">Log out</button>
   </div>
   <div class="brand-row">
@@ -78,6 +85,8 @@
   <button type="button" data-target="sec-coaches">Coaches</button>
   <button type="button" data-target="sec-leaderboard">Leaderboard</button>
 </nav>
+
+<div class="usage-banner" id="usageBanner" style="display:none;"></div>
 
 <main>
 
@@ -216,6 +225,7 @@
     <span class="sub">season record, top scorers &amp; personal bests</span>
   </div>
   <div class="sides-tabs" id="dashAgeTabs"></div>
+  <button class="btn btn-ghost btn-small" id="btnPrintSeason" style="margin-bottom:14px;" type="button">Print season summary</button>
   <div id="dashBody"></div>
 
   <div class="section-title" id="sec-leaderboard">
@@ -252,7 +262,12 @@
     </div>
     <div class="field">
       <label>Venue (optional)</label>
-      <input type="text" id="fxVenue" placeholder="Home / Away / Ground name">
+      <input type="text" id="fxVenue" list="venueList" placeholder="Home / Away / Ground name" autocomplete="off">
+      <datalist id="venueList"></datalist>
+    </div>
+    <div class="field">
+      <label>Venue address (optional)</label>
+      <input type="text" id="fxVenueAddress" placeholder="For directions — saved for next time you use this venue">
     </div>
     <div class="field">
       <label id="fxAgeGroupsLabel">Age groups &amp; sides playing</label>
@@ -289,10 +304,18 @@
 
 <div class="overlay" id="renameClubModal">
   <div class="modal">
-    <h3>Rename club</h3>
+    <h3>Club settings</h3>
     <div class="field">
       <label>Club / school / team name</label>
       <input type="text" id="renameClubInput" placeholder="e.g. Kingsmead">
+    </div>
+    <div class="field">
+      <label>What best describes you?</label>
+      <div class="chip-check-row">
+        <label class="chip-check"><input type="radio" name="renameClubType" value="club"><span>Club or single team</span></label>
+        <label class="chip-check"><input type="radio" name="renameClubType" value="school"><span>School (multiple teams/sports)</span></label>
+      </div>
+      <p class="icon-picker-hint">This affects your free-plan usage allowance — schools naturally rack up more results across more teams.</p>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost btn-small" id="cancelRenameClub">Cancel</button>
@@ -304,6 +327,14 @@
 <div class="overlay" id="sportModal">
   <div class="modal modal-wide">
     <h3>Add a sport</h3>
+    <div class="field">
+      <label>Quick add</label>
+      <div class="chip-check-row">
+        <button type="button" class="btn btn-ghost btn-small" id="quickAddSwimming">+ Swimming</button>
+        <button type="button" class="btn btn-ghost btn-small" id="quickAddAthletics">+ Athletics</button>
+      </div>
+      <p class="icon-picker-hint">Pre-built with the right events per age group — or set up any other sport manually below.</p>
+    </div>
     <div class="field">
       <label>Sport name</label>
       <input type="text" id="newSportName" placeholder="e.g. Rugby">

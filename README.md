@@ -119,6 +119,28 @@ This is the one part with a few more steps, because sending email needs to happe
 
 ---
 
+## Part 6 — Payments groundwork (not live yet — for when you're ready)
+
+This is already built into the app, but **dormant** until you create a real Stripe account — nothing charges anyone until you complete the steps below.
+
+**What's already working right now, with zero Stripe account needed:**
+- Every organization has a `plan` (defaults `'free'`), `plan_status`, and Stripe ID columns — run `migration-payments.sql` once to add these.
+- Every organization also has an `org_type` (`'club'` or `'school'`) — run `migration-org-type.sql` once to add this. Captured at signup, editable later via **Club settings**.
+- **The conversion trigger is a single, clean metric: results captured** — once a free-plan org passes **270 days since signup (~9 months) OR their type's results threshold** (100 for a school, 20 for a club/single team — whichever comes first), a banner appears prompting them to upgrade. Results is the meaningful signal — it means real season-long usage, not just an account existing — time is the backstop for accounts that barely use it yet never leave either. There's deliberately **no limit on sports or players** — setup work (adding sports, rosters, scheduling fixtures) costs nothing toward the limit, only actual captured match results count, and results scale with program size regardless of how many sports a club runs (they're counted per team per fixture, so a big single-sport school still hits the threshold from game volume alone). This keeps free-tier onboarding completely unrestricted — a school can set up their entire multi-sport program on day one — while still converting genuinely active clubs fairly.
+- This is currently a **visible banner, not a hard block** — since there's no live payment link yet, actually locking someone out before they can pay would be counterproductive. Once Stripe is wired up, this is the natural point to make it a hard block instead (see `renderUsageBanner()` in `app.js`).
+- **Important:** this clock starts the moment an organization is created — including any testing/beta accounts made before a real public launch. `LAUNCH_DATE` in `config.js` is already set — every org's clock starts counting from that date instead of their real signup date, so nothing done during testing counts against anyone.
+- Org type (school vs. club/single team) is set at signup and editable any time via **Club settings** in the header.
+- `supabase/functions/stripe-webhook/index.ts` is fully written and ready to deploy — it listens for Stripe subscription events and keeps `organizations.plan` in sync automatically. It just has nothing to listen to yet.
+
+**What only you can do, once you're ready to actually charge money:**
+1. Create a Stripe account (stripe.com) — this needs your real business/bank details, same as any payment processor.
+2. In Stripe, create a Product + Price for your paid plan.
+3. Set up a Checkout flow (or the simpler no-code **Payment Link**, quick to test with) — either way, the `client_reference_id` needs to be set to the organization's id, so Stripe can tell this function which club just paid. Full instructions are in the comments at the top of `stripe-webhook/index.ts`.
+4. Deploy the webhook function and set its two secrets (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) — same `supabase functions deploy` / `supabase secrets set` pattern you already know from setting up email.
+5. Swap the placeholder `showUpgradePrompt()` alert in the app for a real link to your Stripe Checkout/Payment Link.
+
+**Worth deciding before you flip this on:** 270 days / 100 / 20 are starting recommendations, not fixed — easy to adjust via `FREE_PLAN_MAX_DAYS` and `FREE_PLAN_MAX_RESULTS_BY_TYPE` in `app.js` once you've seen real signup behavior.
+
 ## If something doesn't work
 
 - **Login screen shows but login fails:** double check the email/password in Supabase → Authentication → Users, and that `config.js` has the correct URL/key (no extra quotes or spaces).
