@@ -599,7 +599,7 @@
 .auth-hint{font-size:11px; color:var(--slate); margin:14px 0 0; line-height:1.5; text-align:center;}
 .consent-check{display:flex; align-items:flex-start; gap:9px; cursor:pointer;}
 .consent-check input{margin-top:3px; flex-shrink:0;}
-.consent-check span{font-size:11px; color:var(--slate); line-height:1.5;}
+.consent-check span{font-size:11px; color:var(--slate); line-height:1.5; flex:1; min-width:0;}
 .consent-check a{color:var(--pitch); font-weight:600;}
 
 .staff-list{display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto;}
