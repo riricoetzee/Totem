@@ -597,9 +597,10 @@
 }
 .auth-toggle button.active{background:var(--pitch); color:#fff; border-color:var(--pitch);}
 .auth-hint{font-size:11px; color:var(--slate); margin:14px 0 0; line-height:1.5; text-align:center;}
-.consent-check{display:block; width:100%; min-width:0; align-self:stretch; cursor:pointer; font-size:11px; color:var(--slate); line-height:1.7;}
-.consent-check input{margin-right:6px; vertical-align:-2px;}
-.consent-check a{color:var(--pitch); font-weight:600;}
+.consent-check{display:block; width:100%; overflow:hidden;}
+.consent-check input{float:left; margin:3px 8px 0 0;}
+.consent-check-text{overflow:hidden; display:block; cursor:pointer; font-size:11px; color:var(--slate); line-height:1.7;}
+.consent-check-text a{color:var(--pitch); font-weight:600;}
 
 .staff-list{display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto;}
 .staff-row{
