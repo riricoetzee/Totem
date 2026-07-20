@@ -34,6 +34,12 @@
       <label>Club / school / team name</label>
       <input type="text" id="authOrgName" placeholder="e.g. Riverside Primary">
     </div>
+    <div class="field duplicate-warning" id="duplicateWarningField" style="display:none;">
+      <div class="consent-status-box unconfirmed">A club with this exact name already exists. If you're staff at that club, use "Join an existing club" instead — ask your admin for the invite code. If this is genuinely a different, unrelated club, briefly explain how below to continue.</div>
+      <label style="margin-top:8px;">Why is this a different club?</label>
+      <textarea id="authDuplicateJustification" rows="2" placeholder="e.g. different branch/campus, unrelated club in another city..."></textarea>
+      <p class="icon-picker-hint">If you believe this club's name shouldn't be taken (e.g. it was registered by mistake), <a href="#" id="reportDuplicateLink">contact us</a> instead of proceeding.</p>
+    </div>
     <div class="field" id="orgTypeField" style="display:none;">
       <label>What best describes you?</label>
       <div class="chip-check-row">
@@ -70,6 +76,7 @@
     <span id="headerAccountEmail"></span>
     <button type="button" id="btnInviteStaff" style="display:none;">Invite staff</button>
     <button type="button" id="btnRenameClub" style="display:none;">Club settings</button>
+    <button type="button" id="btnPlatformAdmin" style="display:none;">Platform Admin</button>
     <button type="button" id="btnLogout">Log out</button>
   </div>
   <div class="brand-row">
@@ -310,6 +317,17 @@
     <div class="modal-actions">
       <button class="btn btn-ghost btn-small" id="cancelTrialResult">Cancel</button>
       <button class="btn btn-primary btn-small" id="confirmTrialResult">Save results</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="platformAdminModal">
+  <div class="modal modal-wide">
+    <h3>Platform Admin — all clubs</h3>
+    <p class="icon-picker-hint">Rename a wrongly-named club, or remove one entirely (staff logins stay intact — only the club and its data are deleted). This affects every user of that club — use carefully.</p>
+    <div id="platformAdminList" class="staff-list" style="max-height:400px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-small" id="cancelPlatformAdmin">Close</button>
     </div>
   </div>
 </div>

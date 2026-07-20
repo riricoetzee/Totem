@@ -15,6 +15,7 @@
   let currentOrgType = "club";
   let currentOrgConsentConfirmed = false;
   let currentOrgConsentDate = null;
+  let isPlatformAdmin = false;
   // Free-plan limits. Sports is the real, intentional business lever —
   // players is left generous (not a serious constraint) purely as an
   // anti-abuse ceiling, since schools can genuinely have hundreds of
@@ -111,9 +112,11 @@
   function showAuth(){
     currentUser = null;
     currentOrgId = null;
+    isPlatformAdmin = false;
     document.getElementById("appRoot").style.display = "none";
     document.getElementById("headerAccount").style.display = "none";
     document.getElementById("orgBadge").style.display = "none";
+    document.getElementById("btnPlatformAdmin").style.display = "none";
     document.getElementById("authShell").style.display = "flex";
   }
   function authError(msg){
@@ -154,7 +157,13 @@
     currentOrgConsentDate = data.organizations ? data.organizations.consent_attestation_date : null;
     document.getElementById("btnInviteStaff").style.display = currentUserRole === "owner" ? "" : "none";
     document.getElementById("btnRenameClub").style.display = currentUserRole === "owner" ? "" : "none";
+    checkPlatformAdmin();
     showApp(user, currentOrgName);
+  }
+  async function checkPlatformAdmin(){
+    const { data } = await supabaseClient.from("platform_admins").select("id").eq("id", currentUser.id).maybeSingle();
+    isPlatformAdmin = !!data;
+    document.getElementById("btnPlatformAdmin").style.display = isPlatformAdmin ? "" : "none";
   }
 
   function setAuthMode(mode){
@@ -163,6 +172,7 @@
     const isSignup = mode === "signup";
     document.getElementById("signupTypeField").style.display = isSignup ? "" : "none";
     document.getElementById("orgNameField").style.display = (isSignup && signupType === "create") ? "" : "none";
+    document.getElementById("duplicateWarningField").style.display = "none";
     document.getElementById("orgTypeField").style.display = (isSignup && signupType === "create") ? "" : "none";
     document.getElementById("consentField").style.display = (isSignup && signupType === "create") ? "" : "none";
     document.getElementById("inviteCodeField").style.display = (isSignup && signupType === "join") ? "" : "none";
@@ -178,12 +188,33 @@
     signupType = type;
     document.querySelectorAll(".auth-toggle button[data-signup-type]").forEach(b => b.classList.toggle("active", b.dataset.signupType === type));
     document.getElementById("orgNameField").style.display = type === "create" ? "" : "none";
+    document.getElementById("duplicateWarningField").style.display = "none";
     document.getElementById("orgTypeField").style.display = type === "create" ? "" : "none";
     document.getElementById("consentField").style.display = type === "create" ? "" : "none";
     document.getElementById("inviteCodeField").style.display = type === "join" ? "" : "none";
   }
   document.querySelectorAll(".auth-toggle button[data-mode]").forEach(b => b.addEventListener("click", () => setAuthMode(b.dataset.mode)));
   document.querySelectorAll(".auth-toggle button[data-signup-type]").forEach(b => b.addEventListener("click", () => setSignupType(b.dataset.signupType)));
+
+  async function checkDuplicateOrgName(){
+    const name = document.getElementById("authOrgName").value.trim();
+    const warningField = document.getElementById("duplicateWarningField");
+    if(!name){ warningField.style.display = "none"; return; }
+    const { data, error } = await supabaseClient.rpc("check_org_name_similar", { check_name: name });
+    if(error){ console.warn("Totem: duplicate name check failed —", error.message); return; }
+    warningField.style.display = data ? "" : "none";
+    if(!data) document.getElementById("authDuplicateJustification").value = "";
+  }
+  document.getElementById("authOrgName").addEventListener("blur", checkDuplicateOrgName);
+  document.getElementById("reportDuplicateLink").addEventListener("click", (e) => {
+    e.preventDefault();
+    const name = document.getElementById("authOrgName").value.trim();
+    const supportEmail = (window.TOTEM_CONFIG && window.TOTEM_CONFIG.SUPPORT_EMAIL) || "";
+    if(!supportEmail){ alert("Support contact isn't configured yet — ask your Totem administrator directly."); return; }
+    const subject = encodeURIComponent(`Club name already registered: ${name}`);
+    const body = encodeURIComponent(`Hi,\n\nI tried to register "${name}" as a new club on Totem, but that name is already taken by another account. I believe this is a mistake and that name belongs to us.\n\nPlease could you help resolve this?\n\nThanks`);
+    window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
+  });
 
   async function handleLogin(){
     const email = document.getElementById("authEmail").value.trim();
@@ -198,13 +229,22 @@
       const orgTypeInput = document.querySelector('input[name="authOrgType"]:checked');
       const orgType = orgTypeInput ? orgTypeInput.value : "club";
       const consentChecked = document.getElementById("authConsentCheck").checked;
+      const duplicateWarningShowing = document.getElementById("duplicateWarningField").style.display !== "none";
+      const duplicateJustification = document.getElementById("authDuplicateJustification").value.trim();
       if(signupType === "create" && !orgName){ authError("Enter your club, school, or team's name."); return; }
+      if(signupType === "create" && duplicateWarningShowing && !duplicateJustification){ authError("A club with this name already exists — please explain how this is a different club, or switch to \"Join an existing club\"."); return; }
       if(signupType === "create" && !consentChecked){ authError("Please confirm the consent statement before creating your club."); return; }
       if(signupType === "join" && !inviteCode){ authError("Enter the invite code your club admin gave you."); return; }
 
+      if(signupType === "join"){
+        const { data: joinOrgName, error: lookupError } = await supabaseClient.rpc("get_org_name_for_invite_code", { code: inviteCode });
+        if(lookupError || !joinOrgName){ authError("That invite code wasn't recognized — double check it with your club admin."); return; }
+        if(!confirm(`You're about to join: ${joinOrgName}\n\nIs this your club?`)) return;
+      }
+
       const { data, error } = await supabaseClient.auth.signUp({
         email, password,
-        options: { data: signupType === "create" ? { org_name: orgName, org_type: orgType, consent_attestation: String(consentChecked) } : { invite_code: inviteCode } }
+        options: { data: signupType === "create" ? { org_name: orgName, org_type: orgType, consent_attestation: String(consentChecked), duplicate_justification: duplicateJustification } : { invite_code: inviteCode } }
       });
       if(error){ authError(error.message); return; }
       if(data.user && !data.session){
@@ -292,6 +332,75 @@
       });
     });
   }
+
+  document.getElementById("btnPlatformAdmin").addEventListener("click", () => {
+    document.getElementById("platformAdminModal").classList.add("open");
+    loadPlatformAdminList();
+  });
+  document.getElementById("cancelPlatformAdmin").addEventListener("click", () => {
+    document.getElementById("platformAdminModal").classList.remove("open");
+  });
+  document.getElementById("platformAdminModal").addEventListener("click", (e) => {
+    if(e.target.id === "platformAdminModal") document.getElementById("platformAdminModal").classList.remove("open");
+  });
+  async function loadPlatformAdminList(){
+    const listEl = document.getElementById("platformAdminList");
+    listEl.innerHTML = `<div style="font-size:12px; color:var(--slate);">Loading…</div>`;
+    const { data, error } = await supabaseClient
+      .from("organizations")
+      .select("id, name, org_type, plan, created_at, duplicate_justification, flagged_for_removal, inactivity_warning_sent_at, org_state(updated_at)")
+      .order("flagged_for_removal", { ascending: false })
+      .order("created_at", { ascending: false });
+    if(error){
+      listEl.innerHTML = `<div style="font-size:12px; color:var(--clay);">Could not load clubs — ${escapeHtml(error.message)}</div>`;
+      return;
+    }
+    listEl.innerHTML = data.map(org => {
+      const dateLabel = org.created_at ? new Date(org.created_at).toLocaleDateString() : "";
+      const lastActive = org.org_state ? org.org_state.updated_at : null;
+      const activeLabel = lastActive ? `last active ${new Date(lastActive).toLocaleDateString()}` : "no activity recorded";
+      const flagNote = org.duplicate_justification ? `<div style="font-size:10px; color:var(--gold-deep); margin-top:2px;">Flagged at signup: "${escapeHtml(org.duplicate_justification)}"</div>` : "";
+      let inactivityNote = "";
+      if(org.flagged_for_removal){
+        inactivityNote = `<div style="font-size:10px; color:var(--clay); font-weight:700; margin-top:2px;">⚠ Flagged for removal — inactive since warning, ready for you to review</div>`;
+      } else if(org.inactivity_warning_sent_at){
+        inactivityNote = `<div style="font-size:10px; color:var(--gold-deep); margin-top:2px;">Inactivity warning sent ${new Date(org.inactivity_warning_sent_at).toLocaleDateString()}</div>`;
+      }
+      return `
+        <div class="staff-row" style="align-items:flex-start; flex-direction:column; gap:8px; ${org.flagged_for_removal ? "border-color:var(--clay); background:#FBE9E4;" : ""}">
+          <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+            <span><span class="staff-email">${escapeHtml(org.name)}</span><span class="staff-role">${escapeHtml(org.org_type)} · ${escapeHtml(org.plan)} · created ${escapeHtml(dateLabel)} · ${escapeHtml(activeLabel)}</span></span>
+          </div>
+          ${flagNote}
+          ${inactivityNote}
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-ghost btn-small" data-admin-rename="${org.id}" data-current-name="${escapeHtml(org.name)}">Rename</button>
+            <button type="button" class="btn btn-danger btn-small" data-admin-delete="${org.id}" data-name="${escapeHtml(org.name)}">Delete</button>
+          </div>
+        </div>`;
+    }).join("") || `<div style="font-size:12px; color:var(--slate);">No clubs found.</div>`;
+
+    listEl.querySelectorAll("[data-admin-rename]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const newName = prompt("New name for this club:", btn.dataset.currentName);
+        if(!newName || !newName.trim() || newName.trim() === btn.dataset.currentName) return;
+        const { error } = await supabaseClient.from("organizations").update({ name: newName.trim() }).eq("id", btn.dataset.adminRename);
+        if(error){ alert("Could not rename — " + error.message); return; }
+        loadPlatformAdminList();
+      });
+    });
+    listEl.querySelectorAll("[data-admin-delete]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const name = btn.dataset.name;
+        if(!confirm(`Permanently delete "${name}"?\n\nThis removes the club and ALL its data (players, fixtures, results — everything). Staff logins themselves are not deleted, just their access to this club. This cannot be undone.`)) return;
+        if(prompt(`Type the club's name exactly to confirm deletion:`) !== name) { alert("Name didn't match — nothing was deleted."); return; }
+        const { error } = await supabaseClient.from("organizations").delete().eq("id", btn.dataset.adminDelete);
+        if(error){ alert("Could not delete — " + error.message); return; }
+        loadPlatformAdminList();
+      });
+    });
+  }
+
   document.getElementById("cancelRenameClub").addEventListener("click", () => {
     document.getElementById("renameClubModal").classList.remove("open");
   });

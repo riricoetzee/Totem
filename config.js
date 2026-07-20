@@ -8,5 +8,10 @@ window.TOTEM_CONFIG = {
   // from this date instead of their real signup date — so testing/beta
   // accounts created before launch never get unfairly penalized.
   // Format: "YYYY-MM-DD", e.g. "2026-09-01"
-  LAUNCH_DATE: "2026-09-15"
+  LAUNCH_DATE: "2026-09-15",
+
+  // Shown as a "report this" link when someone hits the duplicate-club-name
+  // warning at signup, so a real school wrongly blocked by someone else's
+  // mistake has an obvious way to reach you instead of being stuck.
+  SUPPORT_EMAIL: "dandanblom@gmail.com"
 };
