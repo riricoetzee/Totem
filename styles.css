@@ -27,6 +27,7 @@
     color:var(--ink);
     font-family:'Inter',sans-serif;
     -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
   .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.03em;}
   .mono{font-family:'JetBrains Mono',monospace;}
@@ -37,7 +38,6 @@
     color:var(--chalk);
     padding:22px 28px 18px;
     position:relative;
-    overflow:hidden;
   }
   header.top::after{
     content:"";
@@ -345,6 +345,9 @@
   .side-slot .slot-name{flex:1; font-weight:600;}
   .side-slot .slot-empty{color:var(--line-strong); font-style:italic; font-weight:500;}
   .side-slot .slot-score{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--pitch-deep); font-size:12px;}
+  .slot-duplicate-row{background:#FBE9E4;}
+  .slot-select-duplicate{border-color:var(--clay) !important; color:var(--clay); font-weight:700;}
+  .slot-duplicate-flag{color:var(--clay); flex-shrink:0; display:flex; align-items:center;}
 
   /* ===== Fixtures ===== */
   .fixtures-panel{padding:16px 18px;}

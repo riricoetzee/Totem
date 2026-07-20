@@ -843,12 +843,13 @@
       .filter(p => p.sportId === sportId && ageGroupForPlayer(p) === group)
       .sort((a,b) => a.name.localeCompare(b.name));
   }
-  function slotEditableHtml(sportId, group, side, position, autoEntry){
+  function slotEditableHtml(sportId, group, side, position, autoEntry, duplicatePlayerIds){
     const key = slotKey(sportId, group, side, position);
     const hasOverride = Object.prototype.hasOwnProperty.call(state.teamOverrides, key);
     const overridePlayerId = hasOverride ? state.teamOverrides[key] : undefined;
     const resolved = resolvedSlot(sportId, group, side, position, autoEntry);
     const players = eligiblePlayersForSwap(sportId, group);
+    const isDuplicate = resolved && duplicatePlayerIds && duplicatePlayerIds.has(resolved.player.id);
 
     const options = [
       `<option value="__auto__" ${!hasOverride ? "selected" : ""}>Auto: ${autoEntry ? escapeHtml(autoEntry.player.name) : "Unfilled"}</option>`,
@@ -858,11 +859,12 @@
 
     const scoreDisplay = resolved ? (resolved.trialTime ? "⏱ " + escapeHtml(resolved.trialTime) : resolved.score.toFixed(1)) : "";
     return `
-      <div class="side-slot${resolved ? "" : " slot-unfilled-row"}">
+      <div class="side-slot${resolved ? "" : " slot-unfilled-row"}${isDuplicate ? " slot-duplicate-row" : ""}" ${isDuplicate ? `title="${escapeHtml(resolved.player.name)} is placed in more than one slot for this age group"` : ""}>
         <span class="slot-pos">${escapeHtml(position)}</span>
-        <select class="slot-select" data-sport="${sportId}" data-group="${escapeHtml(group)}" data-side="${side}" data-position="${escapeHtml(position)}">
+        <select class="slot-select${isDuplicate ? " slot-select-duplicate" : ""}" data-sport="${sportId}" data-group="${escapeHtml(group)}" data-side="${side}" data-position="${escapeHtml(position)}">
           ${options}
         </select>
+        ${isDuplicate ? `<span class="slot-duplicate-flag" title="Placed in more than one slot">${uiIcon("flag", 12)}</span>` : ""}
         <span class="slot-score">${scoreDisplay}</span>
       </div>
     `;
@@ -1548,13 +1550,23 @@
     const board = computeSides(sport.id, sidesActiveAgeGroup);
     boardEl.innerHTML = "";
 
+    const groupPositionsAll = positionsForGroup(sport, sidesActiveAgeGroup);
+    const placementCounts = {};
+    SIDE_LETTERS.forEach(letter => {
+      groupPositionsAll.forEach(pos => {
+        const resolved = resolvedSlot(sport.id, sidesActiveAgeGroup, letter, pos, board[letter][pos]);
+        if(resolved) placementCounts[resolved.player.id] = (placementCounts[resolved.player.id] || 0) + 1;
+      });
+    });
+    const duplicatePlayerIds = new Set(Object.keys(placementCounts).filter(id => placementCounts[id] > 1));
+
     const sideNames = { A:"1st choice", B:"2nd choice", C:"3rd choice", D:"4th choice", E:"5th choice" };
 
     SIDE_LETTERS.forEach(letter => {
       const positions = board[letter];
       const groupPositions = positionsForGroup(sport, sidesActiveAgeGroup);
       const slots = groupPositions
-        .map(pos => slotEditableHtml(sport.id, sidesActiveAgeGroup, letter, pos, positions[pos]))
+        .map(pos => slotEditableHtml(sport.id, sidesActiveAgeGroup, letter, pos, positions[pos], duplicatePlayerIds))
         .join("");
       const hasAny = groupPositions.some(pos => resolvedSlot(sport.id, sidesActiveAgeGroup, letter, pos, positions[pos]));
       if(!hasAny) return;
