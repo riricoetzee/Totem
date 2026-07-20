@@ -15,6 +15,7 @@
   let currentOrgType = "club";
   let currentOrgConsentConfirmed = false;
   let currentOrgConsentDate = null;
+  let currentOrgEmblemUrl = null;
   let isPlatformAdmin = false;
   // Free-plan limits. Sports is the real, intentional business lever —
   // players is left generous (not a serious constraint) purely as an
@@ -117,6 +118,7 @@
     document.getElementById("headerAccount").style.display = "none";
     document.getElementById("orgBadge").style.display = "none";
     document.getElementById("btnPlatformAdmin").style.display = "none";
+    document.getElementById("accountDropdown").style.display = "none";
     document.getElementById("authShell").style.display = "flex";
   }
   function authError(msg){
@@ -138,7 +140,7 @@
   async function resolveOrgAndEnter(user){
     const { data, error } = await supabaseClient
       .from("team_members")
-      .select("org_id, role, organizations(name, plan, created_at, org_type, consent_attestation_confirmed, consent_attestation_date)")
+      .select("org_id, role, organizations(name, plan, created_at, org_type, consent_attestation_confirmed, consent_attestation_date, emblem_url)")
       .eq("id", user.id)
       .single();
     if(error || !data || !data.org_id){
@@ -155,6 +157,7 @@
     currentOrgType = data.organizations ? data.organizations.org_type : "club";
     currentOrgConsentConfirmed = data.organizations ? data.organizations.consent_attestation_confirmed : false;
     currentOrgConsentDate = data.organizations ? data.organizations.consent_attestation_date : null;
+    currentOrgEmblemUrl = data.organizations ? data.organizations.emblem_url : null;
     document.getElementById("btnInviteStaff").style.display = currentUserRole === "owner" ? "" : "none";
     document.getElementById("btnRenameClub").style.display = currentUserRole === "owner" ? "" : "none";
     checkPlatformAdmin();
@@ -262,6 +265,22 @@
   }
   document.getElementById("btnLogin").addEventListener("click", handleLogin);
   document.getElementById("authPassword").addEventListener("keydown", (e) => { if(e.key === "Enter") handleLogin(); });
+
+  document.getElementById("btnAccountMenu").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const dropdown = document.getElementById("accountDropdown");
+    dropdown.style.display = dropdown.style.display === "none" ? "flex" : "none";
+  });
+  document.addEventListener("click", (e) => {
+    const dropdown = document.getElementById("accountDropdown");
+    if(dropdown.style.display !== "none" && !dropdown.contains(e.target) && e.target.id !== "btnAccountMenu"){
+      dropdown.style.display = "none";
+    }
+  });
+  document.getElementById("accountDropdown").addEventListener("click", (e) => {
+    if(e.target.tagName === "BUTTON") document.getElementById("accountDropdown").style.display = "none";
+  });
+
   document.getElementById("btnLogout").addEventListener("click", async () => {
     await supabaseClient.auth.signOut();
     showAuth();
@@ -283,7 +302,19 @@
     document.getElementById("renameClubModal").classList.add("open");
     loadStaffList();
     renderConsentStatus();
+    renderEmblemPreview();
   });
+  function renderEmblemPreview(){
+    const preview = document.getElementById("emblemPreview");
+    const removeBtn = document.getElementById("btnRemoveEmblem");
+    if(currentOrgEmblemUrl){
+      preview.innerHTML = `<img src="${escapeHtml(currentOrgEmblemUrl)}" alt="Club emblem">`;
+      removeBtn.style.display = "";
+    } else {
+      preview.innerHTML = "No emblem uploaded";
+      removeBtn.style.display = "none";
+    }
+  }
   function renderConsentStatus(){
     const box = document.getElementById("consentStatusBox");
     const check = document.getElementById("renameClubConsentCheck");
@@ -297,6 +328,39 @@
       box.textContent = "Not yet confirmed — please review before going live with real player data.";
     }
   }
+
+  document.getElementById("btnUploadEmblem").addEventListener("click", () => {
+    document.getElementById("emblemFileInput").click();
+  });
+  document.getElementById("emblemFileInput").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 2 * 1024 * 1024){ alert("That image is larger than 2MB — please choose a smaller file."); e.target.value = ""; return; }
+    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    const path = `${currentOrgId}.${ext}`;
+    document.getElementById("emblemPreview").innerHTML = "Uploading…";
+
+    const { error: uploadError } = await supabaseClient.storage.from("emblems").upload(path, file, { upsert: true });
+    if(uploadError){ alert("Could not upload emblem — " + uploadError.message); renderEmblemPreview(); return; }
+
+    const { data: urlData } = supabaseClient.storage.from("emblems").getPublicUrl(path);
+    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`; // cache-bust so a replaced image shows immediately
+    const { error: updateError } = await supabaseClient.from("organizations").update({ emblem_url: publicUrl }).eq("id", currentOrgId);
+    if(updateError){ alert("Uploaded, but could not save it to your club — " + updateError.message); renderEmblemPreview(); return; }
+
+    currentOrgEmblemUrl = publicUrl;
+    e.target.value = "";
+    renderEmblemPreview();
+    showToast("Club emblem updated.");
+  });
+  document.getElementById("btnRemoveEmblem").addEventListener("click", async () => {
+    if(!confirm("Remove your club's emblem? It will stop appearing on printed sheets.")) return;
+    const { error } = await supabaseClient.from("organizations").update({ emblem_url: null }).eq("id", currentOrgId);
+    if(error){ alert("Could not remove emblem — " + error.message); return; }
+    currentOrgEmblemUrl = null;
+    renderEmblemPreview();
+    showToast("Club emblem removed.");
+  });
   async function loadStaffList(){
     const listEl = document.getElementById("staffList");
     listEl.innerHTML = `<div style="font-size:12px; color:var(--slate);">Loading…</div>`;
@@ -2510,7 +2574,8 @@
     win.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(title)}</title>
       <style>
         body{font-family:Arial,Helvetica,sans-serif; padding:32px; color:#14201A;}
-        .print-logo{height:100px; width:auto; display:block; margin:0 0 22px; padding-bottom:16px; border-bottom:2px solid #14201A;}
+        .print-header{display:flex; align-items:center; gap:18px; margin-bottom:22px; padding-bottom:16px; border-bottom:2px solid #14201A;}
+        .print-header img{height:80px; width:auto; display:block;}
         h1{font-size:22px; margin:0 0 2px;}
         .sub{color:#5B6B63; font-size:13px; margin-bottom:6px;}
         .coach-line{color:#14201A; font-size:13px; font-weight:700; margin-bottom:18px;}
@@ -2521,7 +2586,10 @@
         .footer{margin-top:36px; font-size:10px; color:#999;}
         @media print{ body{padding:0;} }
       </style></head><body>
-      <img class="print-logo" src="${TOTEM_PRINT_LOGO_B64}" alt="Totem">
+      <div class="print-header">
+        ${currentOrgEmblemUrl ? `<img src="${currentOrgEmblemUrl}" alt="${escapeHtml(currentOrgName || "Club emblem")}">` : ""}
+        <img src="${TOTEM_PRINT_LOGO_B64}" alt="Totem">
+      </div>
       <h1>${escapeHtml(title)}</h1>
       <div class="sub">${escapeHtml(subtitle)}</div>
       ${coachName ? `<div class="coach-line">Coach: ${escapeHtml(coachName)}</div>` : ""}
@@ -2587,7 +2655,8 @@
     win.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(sport.name)} — ${escapeHtml(label)} result</title>
       <style>
         body{font-family:Arial,Helvetica,sans-serif; padding:32px; color:#14201A;}
-        .print-logo{height:100px; width:auto; display:block; margin:0 0 22px; padding-bottom:16px; border-bottom:2px solid #14201A;}
+        .print-header{display:flex; align-items:center; gap:18px; margin-bottom:22px; padding-bottom:16px; border-bottom:2px solid #14201A;}
+        .print-header img{height:80px; width:auto; display:block;}
         h1{font-size:22px; margin:0 0 2px;}
         .sub{color:#5B6B63; font-size:13px; margin-bottom:6px;}
         .coach-line{font-size:13px; font-weight:700; margin-bottom:18px;}
@@ -2599,7 +2668,10 @@
         .footer{margin-top:36px; font-size:10px; color:#999;}
         @media print{ body{padding:0;} }
       </style></head><body>
-      <img class="print-logo" src="${TOTEM_PRINT_LOGO_B64}" alt="Totem">
+      <div class="print-header">
+        ${currentOrgEmblemUrl ? `<img src="${currentOrgEmblemUrl}" alt="${escapeHtml(currentOrgName || "Club emblem")}">` : ""}
+        <img src="${TOTEM_PRINT_LOGO_B64}" alt="Totem">
+      </div>
       <h1>${escapeHtml(sport.name)} — ${escapeHtml(label)}</h1>
       <div class="sub">${escapeHtml(subtitle)}</div>
       ${groupCoach ? `<div class="coach-line">Coach: ${escapeHtml(groupCoach.name)}</div>` : ""}
@@ -2683,7 +2755,8 @@
     win.document.write(`<!DOCTYPE html><html><head><title>${escapeHtml(sport.name)} — ${escapeHtml(group)} season summary</title>
       <style>
         body{font-family:Arial,Helvetica,sans-serif; padding:32px; color:#14201A;}
-        .print-logo{height:100px; width:auto; display:block; margin:0 0 22px; padding-bottom:16px; border-bottom:2px solid #14201A;}
+        .print-header{display:flex; align-items:center; gap:18px; margin-bottom:22px; padding-bottom:16px; border-bottom:2px solid #14201A;}
+        .print-header img{height:80px; width:auto; display:block;}
         h1{font-size:22px; margin:0 0 2px;}
         h2{font-size:15px; margin:26px 0 8px;}
         .sub{color:#5B6B63; font-size:13px; margin-bottom:6px;}
@@ -2698,7 +2771,10 @@
         .footer{margin-top:36px; font-size:10px; color:#999;}
         @media print{ body{padding:0;} }
       </style></head><body>
-      <img class="print-logo" src="${TOTEM_PRINT_LOGO_B64}" alt="Totem">
+      <div class="print-header">
+        ${currentOrgEmblemUrl ? `<img src="${currentOrgEmblemUrl}" alt="${escapeHtml(currentOrgName || "Club emblem")}">` : ""}
+        <img src="${TOTEM_PRINT_LOGO_B64}" alt="Totem">
+      </div>
       <h1>${escapeHtml(sport.name)} — ${escapeHtml(group)}</h1>
       <div class="sub">Season summary</div>
       ${groupCoach ? `<div class="coach-line">Coach: ${escapeHtml(groupCoach.name)}</div>` : ""}

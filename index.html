@@ -73,11 +73,16 @@
 <div id="appRoot" style="display:none;">
 <header class="top">
   <div class="header-account" id="headerAccount" style="display:none;">
-    <span id="headerAccountEmail"></span>
-    <button type="button" id="btnInviteStaff" style="display:none;">Invite staff</button>
-    <button type="button" id="btnRenameClub" style="display:none;">Club settings</button>
-    <button type="button" id="btnPlatformAdmin" style="display:none;">Platform Admin</button>
-    <button type="button" id="btnLogout">Log out</button>
+    <button type="button" class="account-trigger" id="btnAccountMenu">
+      <span id="headerAccountEmail"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="account-dropdown" id="accountDropdown" style="display:none;">
+      <button type="button" id="btnInviteStaff" style="display:none;">Invite staff</button>
+      <button type="button" id="btnRenameClub" style="display:none;">Club settings</button>
+      <button type="button" id="btnPlatformAdmin" style="display:none;">Platform Admin</button>
+      <button type="button" id="btnLogout">Log out</button>
+    </div>
   </div>
   <div class="brand-row">
     <div class="totem-mark-icon"><img src="totem-icon-white.png" alt="Totem"></div>
@@ -346,6 +351,18 @@
         <label class="chip-check"><input type="radio" name="renameClubType" value="school"><span>School (multiple teams/sports)</span></label>
       </div>
       <p class="icon-picker-hint">This affects your free-plan usage allowance — schools naturally rack up more results across more teams.</p>
+    </div>
+    <div class="field">
+      <label>Club / school emblem</label>
+      <div class="emblem-upload-row">
+        <div class="emblem-preview" id="emblemPreview">No emblem uploaded</div>
+        <div class="emblem-upload-actions">
+          <input type="file" id="emblemFileInput" accept="image/png,image/jpeg,image/svg+xml" style="display:none;">
+          <button type="button" class="btn btn-ghost btn-small" id="btnUploadEmblem">Upload emblem</button>
+          <button type="button" class="btn btn-danger btn-small" id="btnRemoveEmblem" style="display:none;">Remove</button>
+        </div>
+      </div>
+      <p class="icon-picker-hint">Appears next to the Totem logo on printed team sheets, results, and season summaries. PNG or JPG, up to 2MB.</p>
     </div>
     <div class="field">
       <label>Staff</label>
