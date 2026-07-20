@@ -555,6 +555,7 @@
     results: [],
     trials: [],
     trialResults: [],
+    practices: [],
     teamOverrides: {},
     bench: {},
     unavailable: {},
@@ -1428,6 +1429,17 @@
   function renderMetricsPanel(p){
     const rows = state.metricFields.map(f => {
       const val = p.metrics[f.key] ?? 5;
+      if(f.key === "reliability"){
+        const pct = attendancePercentForPlayer(p);
+        if(pct !== null){
+          return `
+            <div class="metric-row">
+              <div class="m-label">${escapeHtml(f.label)}</div>
+              <div style="flex:1; font-size:12px; color:var(--slate);">Auto-calculated from practice attendance (${pct}%)</div>
+              <div class="m-val">${val}</div>
+            </div>`;
+        }
+      }
       return `
         <div class="metric-row">
           <div class="m-label">${escapeHtml(f.label)}</div>
@@ -1616,6 +1628,10 @@
         (trialsByDate[t.date] = trialsByDate[t.date] || []).push(t);
       });
     }
+    const practicesByDate = {};
+    practicesForSport(sport.id).forEach(p => {
+      (practicesByDate[p.date] = practicesByDate[p.date] || []).push(p);
+    });
     const rosterPlayers = playersForSport(sport.id);
 
     const grid = document.getElementById("calendarGrid");
@@ -1642,6 +1658,7 @@
       cell.className = "cal-cell" + (iso === todayIso ? " today" : "");
       const dayFixtures = fixturesByDate[iso] || [];
       const dayTrials = trialsByDate[iso] || [];
+      const dayPractices = practicesByDate[iso] || [];
       const birthdayPlayers = rosterPlayers.filter(p => {
         if(!p.birthDate || p.dobEstimated) return false;
         const d = new Date(p.birthDate + "T00:00:00");
@@ -1649,12 +1666,14 @@
       });
       const allDayItems = [
         ...dayFixtures.map(f => ({ type: "fixture", data: f })),
-        ...dayTrials.map(t => ({ type: "trial", data: t }))
+        ...dayTrials.map(t => ({ type: "trial", data: t })),
+        ...dayPractices.map(p => ({ type: "practice", data: p }))
       ];
       const chipsToShow = allDayItems.length > 3 ? allDayItems.slice(0, 3) : allDayItems;
       const extraCount = allDayItems.length - chipsToShow.length;
       const chipsHtml = chipsToShow.map(item => {
         if(item.type === "fixture") return `<button class="fixture-chip" data-id="${item.data.id}">${escapeHtml(item.data.opponent)}</button>`;
+        if(item.type === "practice") return `<button class="fixture-chip practice-chip" data-practice-id="${item.data.id}">${uiIcon("coach", 11)} Practice</button>`;
         return `<button class="fixture-chip trial-chip" data-trial-id="${item.data.id}">${uiIcon("flag", 11)} ${escapeHtml(item.data.name)}</button>`;
       }).join("") + (extraCount > 0 ? `<div class="cal-more">+${extraCount} more</div>` : "");
 
@@ -1691,6 +1710,12 @@
         openFixtureId = null;
         renderFixtureList(); renderFixtureDetail();
         document.getElementById("trcard-" + openTrialId)?.scrollIntoView({behavior:"smooth", block:"nearest"});
+      });
+    });
+    grid.querySelectorAll(".practice-chip").forEach(chip => {
+      chip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openAttendanceModal(chip.dataset.practiceId);
       });
     });
   }
@@ -1946,6 +1971,41 @@
   }
   function trialResultFor(trialId, group){
     return state.trialResults.find(r => r.trialId === trialId && groupsMatch(r.ageGroup, group));
+  }
+
+  function practicesForSport(sportId){
+    return state.practices.filter(p => p.sportId === sportId);
+  }
+  // Only practices that have actually happened (today or earlier) count toward
+  // attendance — an upcoming practice with nobody marked yet shouldn't drag
+  // anyone's reliability down before it's even happened.
+  function pastPracticesForPlayerGroup(sportId, group){
+    const todayIso = isoDate(new Date());
+    return state.practices.filter(p =>
+      p.sportId === sportId && p.date <= todayIso && (p.ageGroups || []).some(g => groupsMatch(g, group))
+    );
+  }
+  function attendancePercentForPlayer(player){
+    const eligible = pastPracticesForPlayerGroup(player.sportId, ageGroupForPlayer(player));
+    if(eligible.length === 0) return null; // not enough data yet
+    const attended = eligible.filter(p => (p.attendedPlayerIds || []).includes(player.id)).length;
+    return Math.round((attended / eligible.length) * 1000) / 10; // one decimal place
+  }
+  function reliabilityFromAttendance(pct){
+    return Math.round((pct / 10) * 10) / 10; // 100% -> 10, 10% -> 1, one decimal place
+  }
+  // Recomputes and stores the reliability metric for every player eligible for
+  // a given sport+age-group, based on their practice attendance so far. Called
+  // whenever a practice's attendance register is saved.
+  function recomputeReliabilityFor(sportId, ageGroups){
+    const hasReliabilityField = state.metricFields.some(f => f.key === "reliability");
+    if(!hasReliabilityField) return;
+    state.players
+      .filter(p => p.sportId === sportId && ageGroups.some(g => groupsMatch(g, ageGroupForPlayer(p))))
+      .forEach(p => {
+        const pct = attendancePercentForPlayer(p);
+        if(pct !== null) p.metrics.reliability = reliabilityFromAttendance(pct);
+      });
   }
   // Fastest recorded trial time for a player in a specific event/age group,
   // across every trial captured for that sport — used to rank individual-sport
@@ -3032,6 +3092,165 @@
   });
 
   document.getElementById("btnAddFixture").addEventListener("click", () => openAddFixtureModal());
+  document.getElementById("btnAddPractice").addEventListener("click", () => openAddPracticeModal());
+  let editingPracticeId = null;
+
+  function openAddPracticeModal(practice){
+    const sport = currentSport();
+    editingPracticeId = practice ? practice.id : null;
+    document.getElementById("prDate").value = practice ? practice.date : isoDate(new Date());
+    document.getElementById("prTime").value = practice ? (practice.time || "") : "";
+    document.getElementById("prVenue").value = practice ? (practice.venue || "") : "";
+    populateVenueDatalist();
+
+    const groups = ageGroupsForSport(sport.id);
+    const wrap = document.getElementById("prAgeGroups");
+    wrap.innerHTML = groups.map(g => `
+      <label class="chip-check">
+        <input type="checkbox" data-group="${g}" ${practice && (practice.ageGroups || []).includes(g) ? "checked" : ""}>
+        <span>${g}</span>
+      </label>
+    `).join("") || `<span style="font-size:12px; color:var(--slate);">Add some players first to pick an age group.</span>`;
+
+    document.getElementById("practiceModalTitle").textContent = practice ? "Edit practice session" : "Add a practice session";
+    document.getElementById("confirmPractice").textContent = practice ? "Save changes" : "Save practice";
+    document.getElementById("practiceModal").classList.add("open");
+  }
+  document.getElementById("cancelPractice").addEventListener("click", () => {
+    editingPracticeId = null;
+    document.getElementById("practiceModal").classList.remove("open");
+  });
+  document.getElementById("practiceModal").addEventListener("click", (e) => {
+    if(e.target.id === "practiceModal"){
+      editingPracticeId = null;
+      document.getElementById("practiceModal").classList.remove("open");
+    }
+  });
+  document.getElementById("confirmPractice").addEventListener("click", () => {
+    const sport = currentSport();
+    const date = document.getElementById("prDate").value;
+    const time = document.getElementById("prTime").value || null;
+    const venue = document.getElementById("prVenue").value.trim();
+    if(venue) upsertVenue(venue, "");
+    const ageGroups = Array.from(document.querySelectorAll("#prAgeGroups input:checked")).map(cb => cb.dataset.group);
+
+    if(!date){ alert("Pick a date."); return; }
+    if(ageGroups.length === 0){ alert("Select at least one age group."); return; }
+
+    if(editingPracticeId){
+      const p = state.practices.find(x => x.id === editingPracticeId);
+      if(p){ p.date = date; p.time = time; p.venue = venue; p.ageGroups = ageGroups; }
+    } else {
+      state.practices.push({ id: uid(), sportId: sport.id, date, time, venue, ageGroups, attendedPlayerIds: [] });
+    }
+    recomputeReliabilityFor(sport.id, ageGroups);
+    editingPracticeId = null;
+    document.getElementById("practiceModal").classList.remove("open");
+    saveState();
+    renderCalendar(); renderPracticeList(); renderRoster(); renderSides();
+  });
+
+  function renderPracticeList(){
+    const sport = currentSport();
+    const list = practicesForSport(sport.id).slice().sort((a,b) => a.date.localeCompare(b.date));
+    const el = document.getElementById("practiceList");
+
+    if(list.length === 0){
+      el.innerHTML = `<div class="roster-empty">
+        <span class="glyph">${uiIcon("calendar", 34)}</span>
+        <h3>No practice sessions yet</h3>
+        <div>Add one above, then take attendance each session — it automatically updates each player's reliability rating.</div>
+      </div>`;
+      return;
+    }
+
+    el.innerHTML = list.map(p => {
+      const dateLabel = new Date(p.date + "T00:00:00").toLocaleDateString(undefined,{weekday:"short", day:"numeric", month:"short"}) + (p.time ? ` · ${formatFixtureTime(p.time)}` : "");
+      const eligibleCount = state.players.filter(pl => pl.sportId === sport.id && p.ageGroups.some(g => groupsMatch(g, ageGroupForPlayer(pl)))).length;
+      const attendedCount = (p.attendedPlayerIds || []).length;
+      return `
+        <div class="fixture-card">
+          <div class="fixture-card-main">
+            <div class="fixture-date">${dateLabel}</div>
+            <div class="fixture-opponent">${p.ageGroups.join(", ")}</div>
+            ${p.venue ? `<div class="fixture-venue">${venueLineHtml(p.venue, false)}</div>` : ""}
+            <div class="fixture-venue">${attendedCount}/${eligibleCount} attended</div>
+          </div>
+          <div class="fixture-card-actions">
+            <button class="btn btn-ghost btn-small" data-action="take-attendance" data-id="${p.id}">Take attendance</button>
+            <button class="btn btn-ghost btn-small" data-action="edit-practice" data-id="${p.id}">Edit</button>
+            <button class="btn btn-danger btn-small" data-action="delete-practice" data-id="${p.id}">Remove</button>
+          </div>
+        </div>`;
+    }).join("");
+
+    el.querySelectorAll('[data-action="take-attendance"]').forEach(btn => {
+      btn.addEventListener("click", () => openAttendanceModal(btn.dataset.id));
+    });
+    el.querySelectorAll('[data-action="edit-practice"]').forEach(btn => {
+      btn.addEventListener("click", () => {
+        const p = state.practices.find(x => x.id === btn.dataset.id);
+        if(p) openAddPracticeModal(p);
+      });
+    });
+    el.querySelectorAll('[data-action="delete-practice"]').forEach(btn => {
+      btn.addEventListener("click", () => {
+        const p = state.practices.find(x => x.id === btn.dataset.id);
+        if(p && confirm(`Remove this practice session (${p.date})? This also removes it from attendance history and may lower affected players' reliability.`)){
+          const sportId = p.sportId, groups = p.ageGroups;
+          state.practices = state.practices.filter(x => x.id !== p.id);
+          recomputeReliabilityFor(sportId, groups);
+          saveState();
+          renderCalendar(); renderPracticeList(); renderRoster(); renderSides();
+        }
+      });
+    });
+  }
+
+  function openAttendanceModal(practiceId){
+    const p = state.practices.find(x => x.id === practiceId);
+    if(!p) return;
+    editingPracticeId = practiceId;
+    const eligible = state.players
+      .filter(pl => pl.sportId === p.sportId && p.ageGroups.some(g => groupsMatch(g, ageGroupForPlayer(pl))))
+      .sort((a,b) => a.name.localeCompare(b.name));
+
+    document.getElementById("attendanceSubtitle").textContent = `${p.date}${p.time ? " · " + formatFixtureTime(p.time) : ""} — ${p.ageGroups.join(", ")}`;
+    const listEl = document.getElementById("attendanceList");
+    if(eligible.length === 0){
+      listEl.innerHTML = `<div style="font-size:13px; color:var(--slate);">No players found for ${p.ageGroups.join(", ")} in this sport yet.</div>`;
+    } else {
+      listEl.innerHTML = eligible.map(pl => `
+        <label class="staff-row" style="cursor:pointer;">
+          <span class="staff-email">${escapeHtml(pl.name)}</span>
+          <input type="checkbox" class="attendance-check" data-player="${pl.id}" ${(p.attendedPlayerIds || []).includes(pl.id) ? "checked" : ""}>
+        </label>
+      `).join("");
+    }
+    document.getElementById("attendanceModal").classList.add("open");
+  }
+  document.getElementById("cancelAttendance").addEventListener("click", () => {
+    editingPracticeId = null;
+    document.getElementById("attendanceModal").classList.remove("open");
+  });
+  document.getElementById("attendanceModal").addEventListener("click", (e) => {
+    if(e.target.id === "attendanceModal"){
+      editingPracticeId = null;
+      document.getElementById("attendanceModal").classList.remove("open");
+    }
+  });
+  document.getElementById("saveAttendance").addEventListener("click", () => {
+    const p = state.practices.find(x => x.id === editingPracticeId);
+    if(!p) return;
+    p.attendedPlayerIds = Array.from(document.querySelectorAll(".attendance-check:checked")).map(cb => cb.dataset.player);
+    recomputeReliabilityFor(p.sportId, p.ageGroups);
+    editingPracticeId = null;
+    document.getElementById("attendanceModal").classList.remove("open");
+    saveState();
+    renderPracticeList(); renderRoster(); renderSides(); renderTopPicks();
+    showToast("Attendance saved — reliability ratings updated.");
+  });
+
   document.getElementById("btnPrintSeason").addEventListener("click", () => {
     if(!dashboardAgeGroup){ alert("No age group selected yet — add some players first."); return; }
     printSeasonSummary(currentSport().id, dashboardAgeGroup);
@@ -3198,6 +3417,7 @@
     renderCalendar();
     renderFixtureList();
     renderFixtureDetail();
+    renderPracticeList();
     renderDashboard();
     renderCoachLeaderboard();
     renderUsageBanner();

@@ -241,12 +241,19 @@
       <div class="calendar-title" id="calTitle"></div>
       <button class="btn btn-ghost btn-small" id="calNext">›</button>
       <button class="btn btn-primary btn-small" id="btnAddFixture" style="margin-left:auto;">+ Add fixture</button>
+      <button class="btn btn-ghost btn-small" id="btnAddPractice">+ Add practice</button>
     </div>
     <div class="calendar-grid" id="calendarGrid"></div>
   </div>
 
   <div id="fixtureList" class="fixture-list"></div>
   <div id="fixtureDetail"></div>
+
+  <div class="section-title" id="sec-practices">
+    <h2>Practice sessions</h2>
+    <span class="sub">attendance auto-updates the reliability rating</span>
+  </div>
+  <div id="practiceList" class="fixture-list"></div>
 
   <div class="section-title" id="sec-results">
     <h2>Results &amp; stats</h2>
@@ -308,6 +315,44 @@
     <div class="modal-actions">
       <button class="btn btn-ghost btn-small" id="cancelFixture">Cancel</button>
       <button class="btn btn-primary btn-small" id="confirmFixture">Save fixture</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="practiceModal">
+  <div class="modal modal-wide">
+    <h3 id="practiceModalTitle">Add a practice session</h3>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="prDate">
+    </div>
+    <div class="field">
+      <label>Time (optional)</label>
+      <input type="time" id="prTime" style="width:110px;">
+    </div>
+    <div class="field">
+      <label>Venue (optional)</label>
+      <input type="text" id="prVenue" list="venueList" placeholder="Home / Away / Ground name" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Age group(s) attending</label>
+      <div id="prAgeGroups" class="chip-check-row"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-small" id="cancelPractice">Cancel</button>
+      <button class="btn btn-primary btn-small" id="confirmPractice">Save practice</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="attendanceModal">
+  <div class="modal modal-wide">
+    <h3>Attendance register</h3>
+    <p class="icon-picker-hint" id="attendanceSubtitle"></p>
+    <div id="attendanceList" class="staff-list" style="max-height:400px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-small" id="cancelAttendance">Close</button>
+      <button class="btn btn-primary btn-small" id="saveAttendance">Save attendance</button>
     </div>
   </div>
 </div>
