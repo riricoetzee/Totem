@@ -77,6 +77,13 @@
   .sport-tab:hover{background:rgba(255,255,255,0.16);}
   .sport-tab.active{background:var(--brand-mint); color:var(--brand-navy-deep); border-color:var(--brand-mint);}
   .sport-tab .icon{font-size:16px; display:inline-flex; align-items:center;}
+  .sport-tab-remove{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:16px; height:16px; border-radius:50%; opacity:0.55; flex-shrink:0;
+    transition:opacity .15s ease, background .15s ease;
+  }
+  .sport-tab-remove:hover{opacity:1; background:rgba(255,255,255,0.25);}
+  .sport-tab.active .sport-tab-remove:hover{background:rgba(20,32,26,0.15);}
   .sport-icon-svg{display:block; flex-shrink:0;}
   .ui-icon{display:inline-block; vertical-align:-2px; flex-shrink:0;}
   .sport-icon-badge{

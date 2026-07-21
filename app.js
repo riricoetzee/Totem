@@ -1203,7 +1203,7 @@
     state.sports.forEach(s => {
       const btn = document.createElement("button");
       btn.className = "sport-tab" + (s.id === state.activeSport ? " active" : "");
-      btn.innerHTML = `<span class="icon">${sportIconHtml(s, 16)}</span><span>${escapeHtml(s.name)}</span>`;
+      btn.innerHTML = `<span class="icon">${sportIconHtml(s, 16)}</span><span>${escapeHtml(s.name)}</span><span class="sport-tab-remove" data-sport-id="${s.id}" title="Remove ${escapeHtml(s.name)}">${uiIcon("close", 11)}</span>`;
       btn.addEventListener("click", () => { state.activeSport = s.id; expandedPlayerId = null; sidesActiveAgeGroup = null; openFixtureId = null; openTrialId = null; dashboardAgeGroup = null; render(); });
       nav.appendChild(btn);
     });
@@ -1212,7 +1212,68 @@
     addBtn.textContent = "+ Add sport";
     addBtn.addEventListener("click", () => openSportModal(false));
     nav.appendChild(addBtn);
+
+    nav.querySelectorAll(".sport-tab-remove").forEach(icon => {
+      icon.addEventListener("click", (e) => {
+        e.stopPropagation();
+        confirmRemoveSport(icon.dataset.sportId);
+      });
+    });
   }
+
+  function confirmRemoveSport(sportId){
+    const sport = state.sports.find(s => s.id === sportId);
+    if(!sport) return;
+    if(state.sports.length <= 1){ alert("You need at least one sport — add another before removing this one."); return; }
+
+    const playerCount = state.players.filter(p => p.sportId === sportId).length;
+    const fixtureCount = state.fixtures.filter(f => f.sportId === sportId).length;
+    const trialCount = state.trials.filter(t => t.sportId === sportId).length;
+    const practiceCount = state.practices.filter(p => p.sportId === sportId).length;
+    const coachCount = state.coaches.filter(c => c.sportId === sportId).length;
+    const resultCount = state.results.filter(r => r.sportId === sportId).length + state.trialResults.filter(r => r.sportId === sportId).length;
+
+    const summary = [
+      playerCount ? `${playerCount} player${playerCount === 1 ? "" : "s"}` : null,
+      fixtureCount + trialCount ? `${fixtureCount + trialCount} fixture${fixtureCount + trialCount === 1 ? "" : "s"}/trial${fixtureCount + trialCount === 1 ? "" : "s"}` : null,
+      practiceCount ? `${practiceCount} practice session${practiceCount === 1 ? "" : "s"}` : null,
+      coachCount ? `${coachCount} coach assignment${coachCount === 1 ? "" : "s"}` : null,
+      resultCount ? `${resultCount} captured result${resultCount === 1 ? "" : "s"}` : null
+    ].filter(Boolean).join(", ");
+
+    const warning = summary
+      ? `Removing ${sport.name} permanently deletes everything tied to it: ${summary}. This cannot be undone.`
+      : `Removing ${sport.name} — it has no players or data yet, this is safe.`;
+
+    if(!confirm(`${warning}\n\nContinue?`)) return;
+    if(summary && prompt(`Type "${sport.name}" exactly to confirm deletion:`) !== sport.name){
+      alert("Name didn't match — nothing was removed.");
+      return;
+    }
+
+    const fixtureIds = new Set(state.fixtures.filter(f => f.sportId === sportId).map(f => f.id));
+
+    state.sports = state.sports.filter(s => s.id !== sportId);
+    state.players = state.players.filter(p => p.sportId !== sportId);
+    state.fixtures = state.fixtures.filter(f => f.sportId !== sportId);
+    state.trials = state.trials.filter(t => t.sportId !== sportId);
+    state.practices = state.practices.filter(p => p.sportId !== sportId);
+    state.coaches = state.coaches.filter(c => c.sportId !== sportId);
+    state.results = state.results.filter(r => r.sportId !== sportId);
+    state.trialResults = state.trialResults.filter(r => r.sportId !== sportId);
+    Object.keys(state.teamOverrides).forEach(key => { if(key.startsWith(sportId + "|")) delete state.teamOverrides[key]; });
+    Object.keys(state.bench).forEach(key => { if(key.startsWith(sportId + "|")) delete state.bench[key]; });
+    fixtureIds.forEach(fid => { delete state.unavailable[fid]; });
+
+    if(state.activeSport === sportId){
+      state.activeSport = state.sports[0] ? state.sports[0].id : null;
+    }
+
+    saveState(); render();
+    announceTierIfChanged();
+    showToast(`${sport.name} removed.`);
+  }
+
 
   function updateEventsToggleLabel(){
     const count = document.querySelectorAll("#inPositionsMulti input:checked").length;
@@ -3574,6 +3635,7 @@
 
   // ---------- interface icons (replace every remaining emoji, same visual language as sport icons) ----------
   const UI_ICONS = {
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
     coach: '<circle cx="12" cy="8" r="3.3"/><path d="M5 20a7 7 0 0 1 14 0"/>',
     playerPlus: '<circle cx="9" cy="8" r="3.2"/><path d="M2.8 20a6.3 6.3 0 0 1 12.4 0"/><path d="M18 8v6M15 11h6"/>',
     trophy: '<path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 5H4.5A2.5 2.5 0 0 0 7 9.5M17 5h2.5A2.5 2.5 0 0 1 17 9.5"/><path d="M12 13v4"/><path d="M9.5 17h5l1 3H8.5z"/>',
