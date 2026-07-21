@@ -94,12 +94,12 @@
 </header>
 
 <nav class="quicknav" id="quicknav">
-  <button type="button" data-target="sec-roster">Roster</button>
-  <button type="button" data-target="sec-picks">Picks</button>
-  <button type="button" data-target="sec-sides">Sides</button>
-  <button type="button" data-target="sec-fixtures">Fixtures</button>
-  <button type="button" data-target="sec-results">Results</button>
   <button type="button" data-target="sec-coaches">Coaches</button>
+  <button type="button" data-target="sec-fixtures">Fixtures</button>
+  <button type="button" data-target="sec-picks">Picks</button>
+  <button type="button" data-target="sec-roster">Roster</button>
+  <button type="button" data-target="sec-sides">Sides</button>
+  <button type="button" data-target="sec-results">Results</button>
   <button type="button" data-target="sec-leaderboard">Leaderboard</button>
 </nav>
 
@@ -223,6 +223,12 @@
   </div>
   <div id="practiceList" class="fixture-list"></div>
 
+  <div class="section-title" id="sec-picks">
+    <h2>Totem picks</h2>
+    <span class="sub" id="picksSub">best-rated player per position &amp; age group</span>
+  </div>
+  <div id="picksGrid" class="picks-grid"></div>
+
   <div class="section-title" id="sec-roster">
     <h2 id="rosterTitle">Roster</h2>
     <span class="sub">tap a card to rate</span>
@@ -240,12 +246,6 @@
   </div>
 
   <div id="rosterGrid" class="grid"></div>
-
-  <div class="section-title" id="sec-picks">
-    <h2>Totem picks</h2>
-    <span class="sub" id="picksSub">best-rated player per position &amp; age group</span>
-  </div>
-  <div id="picksGrid" class="picks-grid"></div>
 
   <div class="section-title" id="sec-sides">
     <h2>Team sides</h2>
