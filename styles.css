@@ -156,8 +156,14 @@
   .field label{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate); font-weight:600;}
   .field input, .field select, .field textarea{
     border:1px solid var(--line-strong); border-radius:7px; padding:9px 10px;
-    font-size:14px; font-family:'Inter',sans-serif; background:var(--chalk);
+    font-size:14px; font-family:'Inter',sans-serif; background-color:var(--chalk);
     min-width:120px; height:40px; box-sizing:border-box; vertical-align:middle;
+  }
+  .field select{
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6B63' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center; background-size:14px;
+    padding-right:32px;
   }
   .field textarea{height:auto; min-height:40px;}
   .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--pitch-light); outline-offset:1px;}
