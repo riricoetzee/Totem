@@ -124,12 +124,14 @@
   function authError(msg){
     const el = document.getElementById("authError");
     document.getElementById("authInfo").style.display = "none";
+    document.getElementById("btnResendConfirmation").style.display = "none";
     el.textContent = msg;
     el.style.display = "block";
   }
   function authInfoMsg(msg){
     const el = document.getElementById("authInfo");
     document.getElementById("authError").style.display = "none";
+    document.getElementById("btnResendConfirmation").style.display = "none";
     el.textContent = msg;
     el.style.display = "block";
   }
@@ -260,11 +262,33 @@
     }
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if(error){ authError(error.message); return; }
+    if(error){
+      authError(error.message);
+      if(error.message && error.message.toLowerCase().includes("not confirmed")){
+        const resendBtn = document.getElementById("btnResendConfirmation");
+        resendBtn.style.display = "";
+        resendBtn.dataset.email = email;
+      }
+      return;
+    }
     await resolveOrgAndEnter(data.user);
   }
   document.getElementById("btnLogin").addEventListener("click", handleLogin);
   document.getElementById("authPassword").addEventListener("keydown", (e) => { if(e.key === "Enter") handleLogin(); });
+  document.getElementById("btnResendConfirmation").addEventListener("click", async (e) => {
+    const email = e.target.dataset.email;
+    if(!email) return;
+    e.target.disabled = true;
+    e.target.textContent = "Sending…";
+    const { error } = await supabaseClient.auth.resend({ type: "signup", email });
+    e.target.disabled = false;
+    e.target.textContent = "Resend confirmation email";
+    if(error){
+      authError("Could not resend — " + error.message);
+    } else {
+      authInfoMsg(`Confirmation email resent to ${email}. Check your inbox (and spam folder).`);
+    }
+  });
 
   document.getElementById("btnAccountMenu").addEventListener("click", (e) => {
     e.stopPropagation();
