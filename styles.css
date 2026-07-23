@@ -27,7 +27,6 @@
     color:var(--ink);
     font-family:'Inter',sans-serif;
     -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
   }
   .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.03em;}
   .mono{font-family:'JetBrains Mono',monospace;}
@@ -41,7 +40,7 @@
   }
   header.top::after{
     content:"";
-    position:absolute; right:-40px; top:-60px;
+    position:absolute; right:0; top:-60px;
     width:220px; height:220px; border-radius:50%;
     background:radial-gradient(circle at 30% 30%, rgba(48,239,198,0.22), transparent 70%);
   }
@@ -700,5 +699,5 @@
 .account-dropdown button:hover{background:var(--chalk);}
 #btnLogout{color:var(--clay);}
 @media (max-width:900px){
-  .header-account{position:relative; z-index:50; margin-bottom:16px; display:flex; justify-content:flex-start;}
+  .header-account{position:relative; top:auto; right:auto; z-index:50; margin-bottom:16px; display:flex; justify-content:flex-start;}
 }
