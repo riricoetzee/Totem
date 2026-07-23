@@ -636,11 +636,11 @@
   // assignment, so a coach covering several age groups only counts once.
   // Prices are ZAR/month, excluding VAT (added at checkout via Paystack).
   const SUBSCRIPTION_TIERS = [
-    { id:"tier1", label:"Starter",    maxSports:1,        maxCoaches:4,         priceZAR:99  },
-    { id:"tier2", label:"Growth",     maxSports:2,        maxCoaches:6,         priceZAR:169 },
-    { id:"tier3", label:"Club",       maxSports:3,        maxCoaches:8,         priceZAR:289 },
-    { id:"tier4", label:"Multi-Sport",maxSports:4,        maxCoaches:10,        priceZAR:399 },
-    { id:"tier5", label:"Unlimited",  maxSports:Infinity, maxCoaches:Infinity,  priceZAR:499 }
+    { id:"tier1", label:"Starter",    maxSports:1,        maxCoaches:4,         priceZAR:49  },
+    { id:"tier2", label:"Growth",     maxSports:2,        maxCoaches:6,         priceZAR:99  },
+    { id:"tier3", label:"Club",       maxSports:3,        maxCoaches:8,         priceZAR:149 },
+    { id:"tier4", label:"Multi-Sport",maxSports:4,        maxCoaches:10,        priceZAR:199 },
+    { id:"tier5", label:"Unlimited",  maxSports:Infinity, maxCoaches:Infinity,  priceZAR:349 }
   ];
   function uniqueCoachCount(){
     const emails = new Set(state.coaches.map(c => (c.email || "").toLowerCase().trim()).filter(Boolean));

@@ -200,11 +200,11 @@ No migration needed — this lives entirely in the same JSON blob everything els
 
 | Tier | Sports | Coaches | Price (ZAR/month, excl. VAT) |
 |---|---|---|---|
-| Starter | 1 | 4 | R99 |
-| Growth | 2 | 6 | R169 |
-| Club | 3 | 8 | R289 |
-| Multi-Sport | 4 | 10 | R399 |
-| Unlimited | unlimited | unlimited | R499 |
+| Starter | 1 | 4 | R49 |
+| Growth | 2 | 6 | R99 |
+| Club | 3 | 8 | R149 |
+| Multi-Sport | 4 | 10 | R199 |
+| Unlimited | unlimited | unlimited | R349 |
 
 **How tier detection actually works, already fully built into the app (no setup needed for this part):**
 - Whichever limit is hit first — sports or coaches — determines the required tier. Coaches are counted as **unique people by email**, not per assignment, so one coach covering 3 age groups still only counts once.
@@ -215,7 +215,7 @@ No migration needed — this lives entirely in the same JSON blob everything els
 **Setting this up for real in Paystack:**
 
 1. Create a Paystack account (paystack.com) with your real South African business/bank details.
-2. In Paystack Dashboard → Payments → Plans, create **five plans**, one per tier above. Amounts are in **cents** (smallest currency unit) — R99 = 9900, R169 = 16900, R289 = 28900, R399 = 39900, R499 = 49900. Interval: monthly. Note each plan's `plan_code` (starts `PLN_`) once created.
+2. In Paystack Dashboard → Payments → Plans, create **five plans**, one per tier above. Amounts are in **cents** (smallest currency unit) — R49 = 4900, R99 = 9900, R149 = 14900, R199 = 19900, R349 = 34900. Interval: monthly. Note each plan's `plan_code` (starts `PLN_`) once created.
 3. **VAT:** since these prices exclude VAT, and Paystack doesn't have a documented automatic exclusive-tax-calculation feature the way Stripe Tax does — worth confirming directly with Paystack support and with an accountant how they expect VAT to be handled on these amounts. The common approach is baking VAT into the plan amount itself, since there's no built-in "add tax at checkout" step to rely on here.
 4. Set up a checkout flow for each tier (Paystack Inline JS, or a hosted Payment Page per plan) — whichever you use, pass the organization's id in the `metadata` field when initializing the transaction (e.g. `metadata: { org_id: "..." }`), so the webhook knows which club just paid. Full instructions are in the comments at the top of `paystack-webhook/index.ts`.
 5. Deploy the webhook and set its secret: `supabase functions deploy paystack-webhook --no-verify-jwt`, then `supabase secrets set PAYSTACK_SECRET_KEY=sk_...`.
