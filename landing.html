@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Totem™ — Team selection you can actually defend</title>
+<meta name="description" content="Totem replaces 'I picked the team' with a ranked, rated, defensible answer. Multi-sport team selection and management for schools and clubs, built in South Africa.">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0A1C2C;
+    --navy-deep:#071523;
+    --mint:#30EFC6;
+    --pitch:#1F5C43;
+    --pitch-deep:#123527;
+    --gold:#E3A62F;
+    --clay:#C1542E;
+    --chalk:#EFF2ED;
+    --ink:#14201A;
+    --slate:#5B6B63;
+    --line:#DBDFD5;
+    --panel:#FFFFFF;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--chalk); color:var(--ink); font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+  }
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;}
+  img,svg{display:block; max-width:100%;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 28px;}
+  section{padding:88px 0;}
+  @media (max-width:700px){ section{padding:56px 0;} .wrap{padding:0 20px;} }
+
+  /* ---------- nav ---------- */
+  header.nav{
+    position:sticky; top:0; z-index:50; background:rgba(10,28,44,0.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .nav-row{display:flex; align-items:center; justify-content:space-between; padding:16px 28px; max-width:1120px; margin:0 auto;}
+  .nav-brand{display:flex; align-items:center; gap:10px; color:#fff; text-decoration:none;}
+  .nav-mark{display:flex; gap:2px; align-items:flex-end;}
+  .nav-mark span{width:5px; border-radius:1px; background:var(--mint);}
+  .nav-brand .word{font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.04em; color:#fff;}
+  .nav-actions{display:flex; gap:10px; align-items:center;}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    border:none; border-radius:8px; padding:11px 20px; font-weight:700; font-size:14px;
+    cursor:pointer; font-family:'Inter',sans-serif; text-decoration:none; transition:transform .1s ease, filter .15s ease, background .15s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-mint{background:var(--mint); color:var(--navy-deep);}
+  .btn-mint:hover{filter:brightness(1.06);}
+  .btn-ghost-light{background:transparent; color:#EAF3EF; border:1px solid rgba(255,255,255,0.28);}
+  .btn-ghost-light:hover{background:rgba(255,255,255,0.08);}
+  .btn-pitch{background:var(--pitch); color:#fff;}
+  .btn-pitch:hover{filter:brightness(1.08);}
+  .btn-lg{padding:15px 28px; font-size:16px;}
+
+  /* ---------- hero ---------- */
+  .hero{
+    background:radial-gradient(ellipse 900px 500px at 78% -10%, rgba(48,239,198,0.16), transparent 65%), var(--navy);
+    color:#fff; padding:96px 0 80px; position:relative; overflow:hidden;
+  }
+  .hero .wrap{display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center;}
+  @media (max-width:900px){ .hero .wrap{grid-template-columns:1fr; gap:48px;} .hero{padding:56px 0 48px;} }
+  .eyebrow{
+    display:inline-block; font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--mint); background:rgba(48,239,198,0.12); border:1px solid rgba(48,239,198,0.3);
+    padding:6px 12px; border-radius:999px; margin-bottom:22px;
+  }
+  .hero h1{
+    font-family:'Bebas Neue',sans-serif; font-size:clamp(38px,5.2vw,64px); line-height:0.98; letter-spacing:0.01em;
+    margin-bottom:22px;
+  }
+  .hero h1 .accent{color:var(--mint);}
+  .hero p.lede{font-size:18px; color:#C7D6CD; max-width:520px; margin-bottom:32px; line-height:1.65;}
+  .hero-ctas{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:18px;}
+  .hero-note{font-size:13px; color:#8FA79C;}
+
+  /* signature visual: rating-justified roster card */
+  .proof-card{
+    background:var(--navy-deep); border:1px solid rgba(255,255,255,0.1); border-radius:16px;
+    padding:22px; box-shadow:0 30px 70px rgba(0,0,0,0.4);
+  }
+  .proof-card .pc-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;}
+  .proof-card .pc-title{font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#8FA79C; font-weight:700;}
+  .proof-card .pc-tag{font-size:10px; font-weight:800; letter-spacing:0.05em; color:var(--navy-deep); background:var(--mint); padding:3px 8px; border-radius:999px;}
+  .roster-row{
+    display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid rgba(255,255,255,0.07);
+  }
+  .roster-row:last-child{border-bottom:none;}
+  .roster-row .r-name{flex:1; font-weight:600; font-size:14px; color:#fff;}
+  .roster-row .r-pos{font-size:10px; color:#8FA79C; text-transform:uppercase; letter-spacing:0.04em; width:34px; flex-shrink:0;}
+  .r-blocks{display:flex; gap:2px; align-items:flex-end; height:26px;}
+  .r-blocks span{width:5px; border-radius:1px; background:var(--mint); opacity:0.9;}
+  .r-score{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--mint); font-size:13px; width:34px; text-align:right; flex-shrink:0;}
+  .proof-caption{margin-top:16px; font-size:12.5px; color:#8FA79C; line-height:1.6;}
+  .proof-caption strong{color:#EAF3EF;}
+
+  /* ---------- problem ---------- */
+  .problem{background:var(--panel);}
+  .problem .wrap{display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;}
+  @media (max-width:860px){ .problem .wrap{grid-template-columns:1fr;} }
+  .section-eyebrow{font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--pitch); margin-bottom:12px;}
+  h2{font-family:'Bebas Neue',sans-serif; font-size:clamp(28px,3.4vw,40px); letter-spacing:0.01em; line-height:1.05; margin-bottom:18px; color:var(--navy);}
+  .lead-text{font-size:16.5px; color:var(--slate); line-height:1.7; max-width:480px;}
+  .lead-text strong{color:var(--ink);}
+
+  .inbox-mock{
+    background:var(--chalk); border:1px solid var(--line); border-radius:14px; padding:4px; box-shadow:0 20px 50px rgba(20,32,26,0.1);
+  }
+  .inbox-mock .im-bar{display:flex; gap:6px; padding:10px 12px;}
+  .inbox-mock .im-bar span{width:9px; height:9px; border-radius:50%; background:var(--line-strong,#C3C9BC);}
+  .inbox-mail{background:var(--panel); border-radius:10px; padding:20px 20px 18px; margin:2px;}
+  .inbox-mail .im-subject{font-weight:700; font-size:14.5px; margin-bottom:4px; color:var(--ink);}
+  .inbox-mail .im-from{font-size:12px; color:var(--slate); margin-bottom:14px;}
+  .inbox-mail .im-body{font-size:14px; color:var(--ink); line-height:1.65;}
+  .inbox-mail .im-body p{margin-bottom:10px;}
+  .inbox-mail .im-sign{font-style:italic; color:var(--slate); font-size:13px;}
+
+  /* ---------- reframe ---------- */
+  .reframe{background:var(--navy);}
+  .reframe .head{text-align:center; max-width:640px; margin:0 auto 48px;}
+  .reframe .section-eyebrow{color:var(--mint);}
+  .reframe h2{color:#fff;}
+  .reframe .head p{color:#C7D6CD; font-size:16.5px; line-height:1.7;}
+  .compare{display:grid; grid-template-columns:1fr 1fr; gap:24px;}
+  @media (max-width:760px){ .compare{grid-template-columns:1fr;} }
+  .compare-card{border-radius:16px; padding:30px 28px;}
+  .compare-card.bad{background:rgba(193,84,46,0.08); border:1px solid rgba(193,84,46,0.35);}
+  .compare-card.good{background:rgba(48,239,198,0.08); border:1px solid rgba(48,239,198,0.35);}
+  .compare-tag{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px;}
+  .compare-card.bad .compare-tag{color:var(--clay);}
+  .compare-card.good .compare-tag{color:var(--mint);}
+  .compare-quote{font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:0.01em; line-height:1.15; color:#fff; margin-bottom:16px;}
+  .compare-card p.expl{font-size:14.5px; color:#B8C7BE; line-height:1.65;}
+
+  /* ---------- how it works ---------- */
+  .how .wrap{max-width:1000px;}
+  .how .head{max-width:560px; margin-bottom:52px;}
+  .steps{display:grid; grid-template-columns:repeat(4,1fr); gap:24px;}
+  @media (max-width:860px){ .steps{grid-template-columns:1fr 1fr;} }
+  @media (max-width:520px){ .steps{grid-template-columns:1fr;} }
+  .step{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:24px 20px;}
+  .step .s-num{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--mint); background:var(--navy); display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; font-size:13px; margin-bottom:16px;}
+  .step h3{font-size:16px; font-weight:700; margin-bottom:8px; color:var(--ink);}
+  .step p{font-size:13.5px; color:var(--slate); line-height:1.6;}
+
+  /* ---------- built for ---------- */
+  .builtfor{background:var(--panel);}
+  .builtfor .wrap{display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start;}
+  @media (max-width:860px){ .builtfor .wrap{grid-template-columns:1fr;} }
+  .trust-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media (max-width:520px){ .trust-grid{grid-template-columns:1fr;} }
+  .trust-item{background:var(--chalk); border:1px solid var(--line); border-radius:12px; padding:20px;}
+  .trust-item .t-icon{width:34px; height:34px; border-radius:9px; background:var(--pitch); display:flex; align-items:center; justify-content:center; margin-bottom:12px; color:#fff;}
+  .trust-item h3{font-size:14.5px; font-weight:700; margin-bottom:6px;}
+  .trust-item p{font-size:13px; color:var(--slate); line-height:1.55;}
+
+  /* ---------- pricing teaser ---------- */
+  .pricing{background:var(--chalk);}
+  .pricing .head{text-align:center; max-width:600px; margin:0 auto 44px;}
+  .price-strip{
+    display:flex; justify-content:center; align-items:flex-end; gap:0; flex-wrap:wrap;
+    background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden;
+  }
+  .price-cell{
+    flex:1; min-width:150px; text-align:center; padding:28px 16px; border-right:1px solid var(--line);
+  }
+  .price-cell:last-child{border-right:none;}
+  .price-cell.featured{background:var(--navy); color:#fff;}
+  .price-cell .p-name{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate); font-weight:700; margin-bottom:10px;}
+  .price-cell.featured .p-name{color:var(--mint);}
+  .price-cell .p-amount{font-family:'JetBrains Mono',monospace; font-size:24px; font-weight:700; color:var(--ink);}
+  .price-cell.featured .p-amount{color:#fff;}
+  .price-cell .p-sub{font-size:11px; color:var(--slate); margin-top:2px;}
+  .price-cell.featured .p-sub{color:#8FA79C;}
+  .pricing-note{text-align:center; font-size:13px; color:var(--slate); margin-top:22px;}
+
+  /* ---------- final cta ---------- */
+  .final-cta{background:var(--pitch-deep); color:#fff; text-align:center;}
+  .final-cta h2{color:#fff; margin-bottom:14px;}
+  .final-cta p{color:#CFE3D6; font-size:16.5px; max-width:480px; margin:0 auto 32px; line-height:1.65;}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--navy-deep); color:#8FA79C; padding:44px 0 32px; font-size:13px;}
+  footer .wrap{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;}
+  footer .f-brand{color:#EAF3EF; font-weight:700;}
+  footer .f-legal{line-height:1.7;}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-row">
+    <a href="landing.html" class="nav-brand">
+      <span class="nav-mark">
+        <span style="height:8px;"></span><span style="height:13px;"></span><span style="height:18px;"></span><span style="height:23px;"></span>
+      </span>
+      <span class="word">TOTEM</span>
+    </a>
+    <div class="nav-actions">
+      <a href="index.html" class="btn btn-ghost-light">Log in</a>
+      <a href="index.html?mode=signup&amp;ref=landing" class="btn btn-mint">Start free trial</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Built for PE teachers, coaches &amp; sports coordinators</span>
+      <h1>You didn't pick the team.<br>The <span class="accent">data</span> did.</h1>
+      <p class="lede">Every season, the same email lands in your inbox: <em>"why wasn't my child selected?"</em> Totem replaces "I picked the team" with a ranked, rated, defensible answer — before you ever have to give one.</p>
+      <div class="hero-ctas">
+        <a href="index.html?mode=signup&amp;ref=landing" class="btn btn-mint btn-lg">Start your free trial</a>
+        <a href="#how" class="btn btn-ghost-light btn-lg">See how it works</a>
+      </div>
+      <p class="hero-note">No card required to try it. Free for as long as you're getting set up.</p>
+    </div>
+    <div class="proof-card">
+      <div class="pc-head">
+        <span class="pc-title">U14A · Netball · Sides</span>
+        <span class="pc-tag">Totem picks</span>
+      </div>
+      <div class="roster-row">
+        <span class="r-pos">GS</span>
+        <span class="r-name">A. Dlamini</span>
+        <span class="r-blocks"><span style="height:8px;"></span><span style="height:14px;"></span><span style="height:20px;"></span><span style="height:24px;"></span><span style="height:22px;"></span></span>
+        <span class="r-score">9.1</span>
+      </div>
+      <div class="roster-row">
+        <span class="r-pos">GA</span>
+        <span class="r-name">K. Naidoo</span>
+        <span class="r-blocks"><span style="height:10px;"></span><span style="height:16px;"></span><span style="height:12px;"></span><span style="height:20px;"></span><span style="height:18px;"></span></span>
+        <span class="r-score">8.4</span>
+      </div>
+      <div class="roster-row">
+        <span class="r-pos">WA</span>
+        <span class="r-name">T. van Wyk</span>
+        <span class="r-blocks"><span style="height:14px;"></span><span style="height:10px;"></span><span style="height:18px;"></span><span style="height:16px;"></span><span style="height:14px;"></span></span>
+        <span class="r-score">7.8</span>
+      </div>
+      <div class="roster-row">
+        <span class="r-pos">C</span>
+        <span class="r-name">L. Mokoena</span>
+        <span class="r-blocks"><span style="height:18px;"></span><span style="height:20px;"></span><span style="height:16px;"></span><span style="height:14px;"></span><span style="height:22px;"></span></span>
+        <span class="r-score">8.9</span>
+      </div>
+      <p class="proof-caption"><strong>Reliability</strong> is computed from real practice attendance — not memory, not favouritism.</p>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="wrap">
+    <div>
+      <span class="section-eyebrow">The Monday morning problem</span>
+      <h2>You know this email before you even open it.</h2>
+      <p class="lead-text">It's not really about the team sheet. It's about being asked to defend a decision you made from memory, under time pressure, with fifteen other things happening at once — and having nothing to point to except <strong>"I picked the team."</strong></p>
+    </div>
+    <div class="inbox-mock">
+      <div class="im-bar"><span></span><span></span><span></span></div>
+      <div class="inbox-mail">
+        <div class="im-subject">Re: U14A Netball selection</div>
+        <div class="im-from">A concerned parent</div>
+        <div class="im-body">
+          <p>Hi Coach,</p>
+          <p>I wanted to understand the reasoning behind this week's side. Emma trained every session and I'm struggling to see why she wasn't included this time.</p>
+          <p class="im-sign">Could you help me understand the selection process?</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="reframe">
+  <div class="wrap">
+    <div class="head">
+      <span class="section-eyebrow">The shift</span>
+      <h2>One sentence changes the whole conversation.</h2>
+      <p>You're not defending a gut feeling anymore. You're describing a system.</p>
+    </div>
+    <div class="compare">
+      <div class="compare-card bad">
+        <div class="compare-tag">Without Totem</div>
+        <div class="compare-quote">"I picked the team."</div>
+        <p class="expl">Personal, unfalsifiable, and impossible to defend without it sounding like an excuse. Every follow-up question puts you further on the back foot.</p>
+      </div>
+      <div class="compare-card good">
+        <div class="compare-tag">With Totem</div>
+        <div class="compare-quote">"The system ranked players by rated performance across positions."</div>
+        <p class="expl">Specific, consistent, and grounded in numbers you were already tracking — practice attendance, position ratings, match history. Not an excuse. An explanation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="wrap">
+    <div class="head">
+      <span class="section-eyebrow">How it works</span>
+      <h2>Four steps, most of which you're already doing.</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="s-num">1</div>
+        <h3>Rate your players</h3>
+        <p>Fitness, skill, speed, whatever matters for your sport — rated per position, per age group. Takes minutes per player, not a whole afternoon.</p>
+      </div>
+      <div class="step">
+        <div class="s-num">2</div>
+        <h3>Totem builds the sides</h3>
+        <p>A, B, C sides ranked automatically from the ratings — ties broken by reliability, not by who you remember best.</p>
+      </div>
+      <div class="step">
+        <div class="s-num">3</div>
+        <h3>Share the real sheet</h3>
+        <p>Print it, WhatsApp it, or email it straight to coaches — opponent, date, venue, and lineup, all in one branded sheet.</p>
+      </div>
+      <div class="step">
+        <div class="s-num">4</div>
+        <h3>Results feed back in</h3>
+        <p>Attendance and match results quietly update reliability over the season — so the picture gets more accurate, not more stale.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="builtfor">
+  <div class="wrap">
+    <div>
+      <span class="section-eyebrow">Built where you're coaching</span>
+      <h2>Made for South African schools and clubs — not adapted for them.</h2>
+      <p class="lead-text">Most team-management software is built for a different market and bolted onto yours afterward. Totem started here.</p>
+    </div>
+    <div class="trust-grid">
+      <div class="trust-item">
+        <div class="t-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        </div>
+        <h3>POPIA-minded from day one</h3>
+        <p>Parental consent workflow and a plain-language privacy policy built in — not an afterthought bolted on later.</p>
+      </div>
+      <div class="trust-item">
+        <div class="t-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
+        <h3>WhatsApp-native sharing</h3>
+        <p>Team sheets go where your parents and coaches actually check — not another inbox nobody opens.</p>
+      </div>
+      <div class="trust-item">
+        <div class="t-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+        </div>
+        <h3>Priced in Rand, for real budgets</h3>
+        <p>Plans start at R49/month — sized for a single school team, not an international sports federation.</p>
+      </div>
+      <div class="trust-item">
+        <div class="t-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <h3>Every sport, one place</h3>
+        <p>Netball, hockey, rugby, cricket, swimming, athletics — a full multi-sport programme under one login.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing">
+  <div class="wrap">
+    <div class="head">
+      <span class="section-eyebrow">Pricing</span>
+      <h2>Start free. Pay for what you actually use.</h2>
+    </div>
+    <div class="price-strip">
+      <div class="price-cell">
+        <div class="p-name">Starter</div>
+        <div class="p-amount">R49</div>
+        <div class="p-sub">1 sport, 4 coaches</div>
+      </div>
+      <div class="price-cell">
+        <div class="p-name">Growth</div>
+        <div class="p-amount">R99</div>
+        <div class="p-sub">2 sports, 6 coaches</div>
+      </div>
+      <div class="price-cell">
+        <div class="p-name">Club</div>
+        <div class="p-amount">R149</div>
+        <div class="p-sub">3 sports, 8 coaches</div>
+      </div>
+      <div class="price-cell featured">
+        <div class="p-name">Multi-Sport</div>
+        <div class="p-amount">R199</div>
+        <div class="p-sub">4 sports, 10 coaches</div>
+      </div>
+      <div class="price-cell">
+        <div class="p-name">Unlimited</div>
+        <div class="p-amount">R349</div>
+        <div class="p-sub">Every sport, every coach</div>
+      </div>
+    </div>
+    <p class="pricing-note">Prices exclude VAT. No sport or player limits during your free trial — set up your whole programme before paying anything.</p>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="wrap">
+    <h2>Your next team sheet could already be defensible.</h2>
+    <p>Set up your first sport in a few minutes. No card required to start.</p>
+    <a href="index.html?mode=signup&amp;ref=landing" class="btn btn-mint btn-lg">Start your free trial</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="f-brand">TOTEM™</span>
+    <span class="f-legal">Totem™ is a trademark of © 2026 Hyperian Labs.<br>Inspired by D.S. Blom.</span>
+  </div>
+</footer>
+
+</body>
+</html>

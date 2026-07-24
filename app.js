@@ -34,6 +34,12 @@
     try{ return localStorage.getItem("totem_signup_source") || null; }catch(e){ return null; }
   }
 
+  // A link like index.html?mode=signup (used by the marketing landing
+  // page's "Start free trial" buttons) jumps straight to the Sign Up tab,
+  // rather than landing someone on Log In after they just read a pitch
+  // about starting a trial.
+  const wantsSignupOnLoad = new URLSearchParams(window.location.search).get("mode") === "signup";
+
   // Free-plan limits. Sports is the real, intentional business lever —
   // players is left generous (not a serious constraint) purely as an
   // anti-abuse ceiling, since schools can genuinely have hundreds of
@@ -137,6 +143,7 @@
     document.getElementById("btnPlatformAdmin").style.display = "none";
     document.getElementById("accountDropdown").style.display = "none";
     document.getElementById("authShell").style.display = "flex";
+    if(wantsSignupOnLoad) setAuthMode("signup");
   }
   function authError(msg){
     const el = document.getElementById("authError");
