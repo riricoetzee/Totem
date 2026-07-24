@@ -268,6 +268,20 @@ Run `migration-signup-source.sql` once. Every team sheet, result, and season sum
 
 **How the tracking actually works:** clicking a tagged link stores the source in the visitor's browser. If they later create a new club — even days afterward, not necessarily the same visit — that source is attached to the new organization automatically. You can see it in **Platform Admin**, right next to each club (e.g. "· via whatsapp_sheet") — real evidence of whether this channel is actually converting, not a guess.
 
+## Season summary sharing (WhatsApp + email)
+
+No migration needed — just deploy one new function: `supabase functions deploy send-season-summary-email` (reuses your existing Resend secrets).
+
+**Where to find it:** Results & Stats dashboard → "Share season summary," right next to the existing Print button. Worth knowing upfront: WhatsApp genuinely can't send to multiple people in one click — each contact needs their own message sent, same as your existing team-sheet share. Email is different — that's a real one-click send to everyone at once, since it goes through this server rather than your phone. "Relevant contacts" means every player's guardian plus every coach assigned anywhere in that specific sport + age group, across every side.
+
+**New field:** players can now have a guardian email, not just a phone number — optional, same as phone, editable from the Add Player form or the ratings panel.
+
+## Live demo mode
+
+No deploy step at all — `demo.html` is a fully static, self-contained page. Visit it directly, or link to it from anywhere (already linked from `landing.html`).
+
+**What it actually is:** the real app, with a pre-built Rugby squad ("Riverstone High," 30 players across two sides, two coaches, five fixtures with three real captured results, practice attendance already logged) loaded directly into memory — no login, no Supabase call, ever. Every button works normally (rate a player, add a fixture, browse sides) but nothing persists past a page refresh, and anything that would normally send a real email (result notifications, fixture bookings, season summaries) is caught and replaced with an honest "this is a demo" message instead of actually sending. Safe to link publicly, anywhere.
+
 ## Roadmap — not built yet, worth revisiting later
 
 **Offline capture for attendance & results.** Coaches taking attendance or capturing a result on a field with no signal currently just fails — there's no local queue or auto-sync yet. Worth building once there's real evidence it's actually costing someone data (a coach genuinely losing a captured result), rather than pre-emptively — right now, growing the customer base matters more than smoothing this edge case. Scoped narrowly to just attendance + results if/when it's built, not the whole app, since those are the two actions most likely to happen with zero signal and least likely to have two people editing the same thing at once.

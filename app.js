@@ -17,6 +17,7 @@
   let currentOrgConsentDate = null;
   let currentOrgEmblemUrl = null;
   let isPlatformAdmin = false;
+  let isDemoMode = false;
 
   // ---------- referral / signup source tracking ----------
   // If someone arrives via a link with ?ref=... (e.g. from a shared team
@@ -190,6 +191,7 @@
     showApp(user, currentOrgName);
   }
   async function checkPlatformAdmin(){
+    if(isDemoMode) return;
     const { data } = await supabaseClient.from("platform_admins").select("id").eq("id", currentUser.id).maybeSingle();
     isPlatformAdmin = !!data;
     document.getElementById("btnPlatformAdmin").style.display = isPlatformAdmin ? "" : "none";
@@ -606,10 +608,18 @@
 
   // persistSession is off, so this will normally find nothing and show the
   // login screen — but check anyway in case a session is still live in-memory.
-  supabaseClient.auth.getSession().then(({ data }) => {
-    if(data.session && data.session.user) resolveOrgAndEnter(data.session.user);
-    else showAuth();
-  });
+  if(window.TOTEM_DEMO_MODE){
+    // Deferred: enterDemoMode() and the demo data it needs are defined much
+    // further down this file (after the sport templates). Calling it
+    // synchronously here, before the rest of the script has finished
+    // running, would hit those consts before they exist.
+    setTimeout(enterDemoMode, 0);
+  } else {
+    supabaseClient.auth.getSession().then(({ data }) => {
+      if(data.session && data.session.user) resolveOrgAndEnter(data.session.user);
+      else showAuth();
+    });
+  }
 
   // ---------- default data ----------
   // Athletics events differ by age group (younger athletes don't throw a
@@ -617,6 +627,9 @@
   // canonical age group rather than one flat list. This is a sensible school-
   // athletics-style progression — adjust freely to match your exact program.
   const ATHLETICS_EVENTS_BY_AGE_GROUP = {
+    "U6":  ["30m","50m","Long Jump","Egg & Spoon"],
+    "U7":  ["30m","50m","100m","Long Jump","Egg & Spoon"],
+    "U8":  ["50m","100m","200m","Long Jump","Turbo Javelin"],
     "U9":  ["60m","100m","200m","600m","Long Jump","High Jump","Turbo Javelin"],
     "U10": ["60m","100m","200m","600m","800m","Long Jump","High Jump","Turbo Javelin"],
     "U11": ["100m","200m","400m","800m","1500m","Long Jump","High Jump","Turbo Javelin"],
@@ -640,6 +653,67 @@
   const RUGBY_TEMPLATE = { id:"rugby", name:"Rugby", iconKey:"rugby", type:"team",
     positions:["Loosehead Prop","Hooker","Tighthead Prop","Lock 1","Lock 2","Blindside Flanker","Openside Flanker","Number 8","Scrum-half","Fly-half","Left Wing","Inside Centre","Outside Centre","Right Wing","Fullback"],
     benchSize:8 };
+
+  // ---------- demo mode ----------
+  const DEMO_EMBLEM_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTE2IiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjExNiI+CjxwYXRoIGQ9Ik01MCAyIEw5NiAxNiBWNTYgQzk2IDg4IDc2IDEwNiA1MCAxMTQgQzI0IDEwNiA0IDg4IDQgNTYgVjE2IFoiIGZpbGw9IiMxRjVDNDMiIHN0cm9rZT0iIzBBMUMyQyIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxwYXRoIGQ9Ik01MCAxMCBMODggMjIgVjU2IEM4OCA4MiA3MSA5OCA1MCAxMDUgQzI5IDk4IDEyIDgyIDEyIDU2IFYyMiBaIiBmaWxsPSIjMTIzNTI3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSI3MiIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjQ2IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjRTNBNjJGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5SSDwvdGV4dD4KPC9zdmc+";
+  function buildDemoState(){
+    return {
+      sports: [JSON.parse(JSON.stringify(RUGBY_TEMPLATE))],
+      metricFields: JSON.parse(JSON.stringify(DEFAULT_FIELDS)),
+      players: [{"id": "demo-p1", "sportId": "rugby", "name": "Sipho Ndlovu", "birthDate": "2008-07-10", "positions": ["Loosehead Prop"], "vo2max": 42.5, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.4, "skill": 8.0, "speed": 7.9, "strength": 9.2, "agility": 9.0, "reliability": 9.5, "teamSpirit": 7.6}}, {"id": "demo-p2", "sportId": "rugby", "name": "Jaco van der Merwe", "birthDate": "2008-01-12", "positions": ["Hooker"], "vo2max": 53.2, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.9, "skill": 6.7, "speed": 7.1, "strength": 8.2, "agility": 8.0, "reliability": 7.2, "teamSpirit": 8.1}}, {"id": "demo-p3", "sportId": "rugby", "name": "Thabo Mokoena", "birthDate": "2008-01-17", "positions": ["Tighthead Prop"], "vo2max": 50.6, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.3, "skill": 9.2, "speed": 7.7, "strength": 7.1, "agility": 7.1, "reliability": 8.9, "teamSpirit": 8.3}}, {"id": "demo-p4", "sportId": "rugby", "name": "Liam O'Brien", "birthDate": "2008-01-13", "positions": ["Lock 1"], "vo2max": 54.4, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 8.9, "skill": 9.3, "speed": 9.9, "strength": 9.4, "agility": 10, "reliability": 9.3, "teamSpirit": 9.6}}, {"id": "demo-p5", "sportId": "rugby", "name": "Kagiso Mahlangu", "birthDate": "2008-05-11", "positions": ["Lock 2"], "vo2max": 51.7, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 10, "skill": 10, "speed": 8.9, "strength": 9.1, "agility": 10.0, "reliability": 8.4, "teamSpirit": 8.8}}, {"id": "demo-p6", "sportId": "rugby", "name": "Ryan Botha", "birthDate": "2008-01-13", "positions": ["Blindside Flanker"], "vo2max": 55.1, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 8.3, "skill": 7.0, "speed": 7.5, "strength": 9.0, "agility": 8.1, "reliability": 7.9, "teamSpirit": 8.2}}, {"id": "demo-p7", "sportId": "rugby", "name": "Lwazi Zulu", "birthDate": "2008-08-12", "positions": ["Openside Flanker"], "vo2max": 46.2, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 8.6, "skill": 7.8, "speed": 9.9, "strength": 9.0, "agility": 9.4, "reliability": 8.2, "teamSpirit": 8.9}}, {"id": "demo-p8", "sportId": "rugby", "name": "Connor Fischer", "birthDate": "2008-09-17", "positions": ["Number 8"], "vo2max": 43.5, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 8.1, "skill": 7.3, "speed": 8.1, "strength": 8.9, "agility": 7.7, "reliability": 7.2, "teamSpirit": 9.1}}, {"id": "demo-p9", "sportId": "rugby", "name": "Bandile Khumalo", "birthDate": "2008-09-14", "positions": ["Scrum-half"], "vo2max": 57.5, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 6.6, "skill": 7.9, "speed": 8.3, "strength": 7.4, "agility": 6.5, "reliability": 7.3, "teamSpirit": 8.8}}, {"id": "demo-p10", "sportId": "rugby", "name": "Pieter Nel", "birthDate": "2008-07-12", "positions": ["Fly-half"], "vo2max": 49.3, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.8, "skill": 9.5, "speed": 9.4, "strength": 9.1, "agility": 8.4, "reliability": 9.3, "teamSpirit": 8.0}}, {"id": "demo-p11", "sportId": "rugby", "name": "Tumelo Sithole", "birthDate": "2008-09-19", "positions": ["Left Wing"], "vo2max": 45.2, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 10, "skill": 8.6, "speed": 9.1, "strength": 8.4, "agility": 10, "reliability": 10, "teamSpirit": 8.6}}, {"id": "demo-p12", "sportId": "rugby", "name": "Jared Abrahams", "birthDate": "2008-06-14", "positions": ["Inside Centre"], "vo2max": 45.8, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.3, "skill": 9.2, "speed": 9.1, "strength": 9.1, "agility": 8.4, "reliability": 8.1, "teamSpirit": 7.2}}, {"id": "demo-p13", "sportId": "rugby", "name": "Mpho Radebe", "birthDate": "2008-08-18", "positions": ["Outside Centre"], "vo2max": 44.6, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 8.1, "skill": 6.9, "speed": 8.5, "strength": 8.7, "agility": 9.1, "reliability": 8.0, "teamSpirit": 7.0}}, {"id": "demo-p14", "sportId": "rugby", "name": "Christiaan Louw", "birthDate": "2008-06-17", "positions": ["Right Wing"], "vo2max": 56.4, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 8.7, "skill": 9.5, "speed": 9.4, "strength": 9.0, "agility": 8.9, "reliability": 8.9, "teamSpirit": 8.2}}, {"id": "demo-p15", "sportId": "rugby", "name": "Sizwe Dube", "birthDate": "2008-01-13", "positions": ["Fullback"], "vo2max": 43.1, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.7, "skill": 7.2, "speed": 7.1, "strength": 8.4, "agility": 8.5, "reliability": 7.1, "teamSpirit": 8.8}}, {"id": "demo-p16", "sportId": "rugby", "name": "Ashwin Pillay", "birthDate": "2008-08-13", "positions": ["Loosehead Prop"], "vo2max": 54.6, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 5.1, "skill": 5.6, "speed": 5.0, "strength": 5.5, "agility": 5.7, "reliability": 6.1, "teamSpirit": 6.5}}, {"id": "demo-p17", "sportId": "rugby", "name": "Dean Coetzee", "birthDate": "2008-02-10", "positions": ["Hooker"], "vo2max": 48.4, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 6.2, "skill": 6.0, "speed": 6.8, "strength": 6.8, "agility": 6.9, "reliability": 7.5, "teamSpirit": 7.4}}, {"id": "demo-p18", "sportId": "rugby", "name": "Lucky Maseko", "birthDate": "2008-02-17", "positions": ["Tighthead Prop"], "vo2max": 54.9, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.0, "skill": 5.5, "speed": 5.4, "strength": 6.0, "agility": 5.9, "reliability": 5.6, "teamSpirit": 5.5}}, {"id": "demo-p19", "sportId": "rugby", "name": "Warrick Adams", "birthDate": "2008-07-17", "positions": ["Lock 1"], "vo2max": 49.7, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 6.1, "skill": 7.4, "speed": 7.1, "strength": 5.9, "agility": 6.1, "reliability": 7.6, "teamSpirit": 6.4}}, {"id": "demo-p20", "sportId": "rugby", "name": "Neo Tshabalala", "birthDate": "2008-09-17", "positions": ["Lock 2"], "vo2max": 44.5, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 8.0, "skill": 6.3, "speed": 5.9, "strength": 6.8, "agility": 8.1, "reliability": 7.7, "teamSpirit": 6.5}}, {"id": "demo-p21", "sportId": "rugby", "name": "Brandon Kruger", "birthDate": "2008-09-12", "positions": ["Blindside Flanker"], "vo2max": 42.9, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.2, "skill": 6.2, "speed": 6.1, "strength": 6.6, "agility": 5.0, "reliability": 6.2, "teamSpirit": 6.0}}, {"id": "demo-p22", "sportId": "rugby", "name": "Sanele Mthembu", "birthDate": "2008-01-19", "positions": ["Openside Flanker"], "vo2max": 43.3, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.3, "skill": 5.4, "speed": 5.4, "strength": 7.3, "agility": 6.2, "reliability": 7.5, "teamSpirit": 6.6}}, {"id": "demo-p23", "sportId": "rugby", "name": "Justin Petersen", "birthDate": "2008-05-17", "positions": ["Number 8"], "vo2max": 47.1, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 6.8, "skill": 6.2, "speed": 6.1, "strength": 7.1, "agility": 6.2, "reliability": 6.1, "teamSpirit": 5.8}}, {"id": "demo-p24", "sportId": "rugby", "name": "Ayanda Cele", "birthDate": "2008-06-11", "positions": ["Scrum-half"], "vo2max": 56.1, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 5.8, "skill": 6.8, "speed": 8.0, "strength": 8.0, "agility": 5.8, "reliability": 6.2, "teamSpirit": 6.3}}, {"id": "demo-p25", "sportId": "rugby", "name": "Michael Steyn", "birthDate": "2008-09-14", "positions": ["Fly-half"], "vo2max": 56.9, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 5.3, "skill": 7.0, "speed": 6.7, "strength": 6.4, "agility": 7.3, "reliability": 6.5, "teamSpirit": 5.0}}, {"id": "demo-p26", "sportId": "rugby", "name": "Katlego Mabaso", "birthDate": "2008-06-13", "positions": ["Left Wing"], "vo2max": 53.0, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 6.6, "skill": 5.1, "speed": 6.6, "strength": 6.3, "agility": 4.9, "reliability": 5.2, "teamSpirit": 5.0}}, {"id": "demo-p27", "sportId": "rugby", "name": "Riaan Fourie", "birthDate": "2008-06-12", "positions": ["Inside Centre"], "vo2max": 52.2, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 7.0, "skill": 6.4, "speed": 8.0, "strength": 6.0, "agility": 7.4, "reliability": 7.8, "teamSpirit": 5.9}}, {"id": "demo-p28", "sportId": "rugby", "name": "Vusi Nkosi", "birthDate": "2008-09-10", "positions": ["Outside Centre"], "vo2max": 55.4, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 6.6, "skill": 6.1, "speed": 5.8, "strength": 4.8, "agility": 5.0, "reliability": 6.9, "teamSpirit": 6.9}}, {"id": "demo-p29", "sportId": "rugby", "name": "Devon Naidoo", "birthDate": "2008-04-13", "positions": ["Right Wing"], "vo2max": 52.7, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 5.7, "skill": 5.7, "speed": 6.1, "strength": 7.5, "agility": 7.3, "reliability": 7.4, "teamSpirit": 7.5}}, {"id": "demo-p30", "sportId": "rugby", "name": "Elton Marais", "birthDate": "2008-03-16", "positions": ["Fullback"], "vo2max": 42.4, "guardianPhone": null, "guardianEmail": null, "metrics": {"fitness": 6.3, "skill": 7.0, "speed": 7.3, "strength": 6.7, "agility": 7.2, "reliability": 5.5, "teamSpirit": 5.3}}],
+      coaches: [{"id": "demo-c1", "sportId": "rugby", "ageGroup": "U18", "side": null, "name": "Marcus Steenkamp", "email": "m.steenkamp@riverstonehigh.demo", "phone": "082 555 0101"}, {"id": "demo-c2", "sportId": "rugby", "ageGroup": "U18", "side": "A", "name": "Nomvula Khumalo", "email": "n.khumalo@riverstonehigh.demo", "phone": "083 555 0102"}],
+      fixtures: [{"id": "demo-f1", "sportId": "rugby", "date": "2026-04-18", "time": "14:30", "opponent": "Oakridge College", "venue": "Riverstone High", "entries": [{"ageGroup": "U18", "side": "A"}]}, {"id": "demo-f2", "sportId": "rugby", "date": "2026-05-02", "time": "15:00", "opponent": "St. Aldwyn's", "venue": "St. Aldwyn's", "entries": [{"ageGroup": "U18", "side": "A"}, {"ageGroup": "U18", "side": "B"}]}, {"id": "demo-f3", "sportId": "rugby", "date": "2026-05-16", "time": "14:00", "opponent": "Marlow Grammar", "venue": "Riverstone High", "entries": [{"ageGroup": "U18", "side": "A"}]}, {"id": "demo-f4", "sportId": "rugby", "date": "2026-08-08", "time": "14:30", "opponent": "Fernwood Academy", "venue": "Fernwood Academy", "entries": [{"ageGroup": "U18", "side": "A"}]}, {"id": "demo-f5", "sportId": "rugby", "date": "2026-08-22", "time": "14:30", "opponent": "Oakridge College", "venue": "Oakridge College", "entries": [{"ageGroup": "U18", "side": "A"}, {"ageGroup": "U18", "side": "B"}]}],
+      trials: [],
+      results: [{"id": "demo-r1", "fixtureId": "demo-f1", "sportId": "rugby", "ageGroup": "U18", "side": "A", "ourScore": 28, "theirScore": 17, "scorers": [], "notes": ""}, {"id": "demo-r2", "fixtureId": "demo-f2", "sportId": "rugby", "ageGroup": "U18", "side": "A", "ourScore": 19, "theirScore": 19, "scorers": [], "notes": ""}, {"id": "demo-r2b", "fixtureId": "demo-f2", "sportId": "rugby", "ageGroup": "U18", "side": "B", "ourScore": 14, "theirScore": 22, "scorers": [], "notes": ""}, {"id": "demo-r3", "fixtureId": "demo-f3", "sportId": "rugby", "ageGroup": "U18", "side": "A", "ourScore": 31, "theirScore": 12, "scorers": [], "notes": ""}],
+      trialResults: [],
+      practices: [{"id": "demo-pr1", "sportId": "rugby", "date": "2026-04-14", "time": "15:30", "venue": "Riverstone High", "ageGroups": ["U18"], "attendedPlayerIds": ["demo-p1", "demo-p2", "demo-p3", "demo-p5", "demo-p6", "demo-p8", "demo-p10", "demo-p13", "demo-p14", "demo-p16", "demo-p17", "demo-p18", "demo-p19", "demo-p20", "demo-p21", "demo-p23", "demo-p24", "demo-p27", "demo-p28", "demo-p29", "demo-p30"]}, {"id": "demo-pr2", "sportId": "rugby", "date": "2026-04-21", "time": "15:30", "venue": "Riverstone High", "ageGroups": ["U18"], "attendedPlayerIds": ["demo-p1", "demo-p2", "demo-p3", "demo-p6", "demo-p7", "demo-p8", "demo-p9", "demo-p10", "demo-p11", "demo-p12", "demo-p13", "demo-p14", "demo-p15", "demo-p16", "demo-p17", "demo-p18", "demo-p19", "demo-p20", "demo-p21", "demo-p23", "demo-p24", "demo-p26", "demo-p28", "demo-p29", "demo-p30"]}, {"id": "demo-pr3", "sportId": "rugby", "date": "2026-05-05", "time": "15:30", "venue": "Riverstone High", "ageGroups": ["U18"], "attendedPlayerIds": ["demo-p1", "demo-p2", "demo-p3", "demo-p4", "demo-p5", "demo-p6", "demo-p7", "demo-p8", "demo-p9", "demo-p10", "demo-p12", "demo-p13", "demo-p14", "demo-p15", "demo-p16", "demo-p17", "demo-p18", "demo-p20", "demo-p21", "demo-p22", "demo-p24", "demo-p25", "demo-p26", "demo-p27", "demo-p28", "demo-p30"]}],
+      teamOverrides: {},
+      bench: {},
+      unavailable: {},
+      venues: [
+        { name: "Riverstone High", address: "12 Ridgeway Avenue, Riverstone" },
+        { name: "Oakridge College", address: "4 Oakridge Drive, Bryanston" },
+        { name: "St. Aldwyn's", address: "88 Aldwyn Road, Sandton" },
+        { name: "Marlow Grammar", address: "21 Marlow Street, Randburg" },
+        { name: "Fernwood Academy", address: "5 Fernwood Close, Midrand" }
+      ],
+      activeSport: "rugby"
+    };
+  }
+  function enterDemoMode(){
+    isDemoMode = true;
+    currentUser = { email: "demo@totem.app" };
+    currentOrgId = "demo-org";
+    currentUserRole = "owner";
+    currentOrgName = "Riverstone High";
+    currentOrgPlan = "tier3";
+    currentOrgCreatedAt = new Date().toISOString();
+    currentOrgType = "school";
+    currentOrgConsentConfirmed = true;
+    currentOrgConsentDate = new Date().toISOString();
+    currentOrgEmblemUrl = DEMO_EMBLEM_URI;
+    isPlatformAdmin = false;
+
+    document.getElementById("authShell").style.display = "none";
+    document.getElementById("appRoot").style.display = "";
+    document.getElementById("headerAccount").style.display = "flex";
+    document.getElementById("headerAccountEmail").textContent = "demo@totem.app";
+    const badge = document.getElementById("orgBadge");
+    badge.textContent = currentOrgName;
+    badge.style.display = "";
+    document.getElementById("btnInviteStaff").style.display = "none";
+    document.getElementById("btnRenameClub").style.display = "none";
+    document.getElementById("btnPlatformAdmin").style.display = "none";
+
+    const demoBanner = document.createElement("div");
+    demoBanner.style.cssText = "background:#E3A62F; color:#123527; text-align:center; padding:10px 16px; font-weight:700; font-size:13px;";
+    demoBanner.innerHTML = "You\'re viewing a live demo with sample data — nothing here is saved or sent. <a href=\"index.html?mode=signup&ref=demo\" style=\"color:#123527; text-decoration:underline;\">Start your own free trial</a>";
+    document.body.insertBefore(demoBanner, document.body.firstChild);
+
+    state = buildDemoState();
+    storageReady = true;
+    render();
+  }
   // Cricket doesn't have fixed fielding positions the way invasion sports do
   // (fielding placement is tactical and changes over by over) — so this
   // template uses batting-order/role slots instead, the closest sensible fit
@@ -757,7 +831,7 @@
   const SIDE_LETTERS = ["A","B","C","D","E"];
   // Every sport always presents this fixed set of teams, regardless of who's
   // currently rated — a club plans age groups ahead of having players in them.
-  const CANONICAL_AGE_GROUPS = ["U9","U10","U11","U12","U13","U14","U15","U16","U17","U18"];
+  const CANONICAL_AGE_GROUPS = ["U6","U7","U8","U9","U10","U11","U12","U13","U14","U15","U16","U17","U18"];
   // U18 is the club's senior/representative age group — team sports use club
   // terminology ("1st Team", "2nd Team"...) for its sides instead of "A Side".
   const U18_SIDE_NAMES = { A:"1st Team", B:"2nd Team", C:"3rd Team", D:"4th Team", E:"5th Team" };
@@ -877,6 +951,7 @@
     if(state.sports.length === 0) openSportModal(true);
   }
   async function saveState(){
+    if(isDemoMode) return; // demo data lives in-memory only, never touches Supabase
     await persistClubState();
   }
 
@@ -1675,6 +1750,15 @@
         saveState(); render();
       });
     });
+    grid.querySelectorAll(".guardian-email-edit").forEach(inp => {
+      inp.addEventListener("change", (e) => {
+        const id = e.target.dataset.id;
+        const p = state.players.find(pl => pl.id === id);
+        if(!p) return;
+        p.guardianEmail = e.target.value.trim() || null;
+        saveState(); render();
+      });
+    });
   }
 
   function updateCardLive(p){
@@ -1726,7 +1810,12 @@
         <div class="m-label">Guardian contact</div>
         <input type="tel" class="guardian-phone-edit" placeholder="082 123 4567" data-id="${p.id}" value="${escapeHtml(p.guardianPhone || "")}">
       </div>`;
-    return `<div class="metrics-panel">${dobRow}${vo2Row}${guardianRow}${rows}</div>`;
+    const guardianEmailRow = `
+      <div class="metric-row">
+        <div class="m-label">Guardian email</div>
+        <input type="email" class="guardian-email-edit" placeholder="parent@email.com" data-id="${p.id}" value="${escapeHtml(p.guardianEmail || "")}">
+      </div>`;
+    return `<div class="metrics-panel">${dobRow}${vo2Row}${guardianRow}${guardianEmailRow}${rows}</div>`;
   }
 
   function renderTopPicks(){
@@ -2988,6 +3077,147 @@
     return text;
   }
 
+  function buildSeasonSummaryText(sportId, group){
+    const sport = state.sports.find(s => s.id === sportId);
+    const results = resultsForSportGroup(sportId, group);
+    const isIndividual = sportType(sport) === "individual";
+    let text = `${sport.name} — ${group} season summary\n\n`;
+
+    if(isIndividual){
+      const bests = {};
+      results.forEach(r => {
+        (r.entries || []).forEach(en => {
+          if(!en.playerId || !en.time) return;
+          const key = en.playerId + "|" + en.event;
+          const secs = parseTimeToSeconds(en.time);
+          if(!bests[key] || secs < bests[key].seconds) bests[key] = { seconds: secs, time: en.time, event: en.event, playerId: en.playerId };
+        });
+      });
+      const bestList = Object.values(bests);
+      if(bestList.length === 0){
+        text += "No personal bests logged yet.\n";
+      } else {
+        text += "Personal bests:\n";
+        bestList.forEach(b => {
+          const player = state.players.find(p => p.id === b.playerId);
+          text += `• ${player ? player.name : "Unknown"} — ${b.event}: ${b.time}\n`;
+        });
+      }
+      text += `\n${results.length} gala${results.length === 1 ? "" : "s"} captured this season.`;
+    } else {
+      let played = 0, won = 0, drawn = 0, lost = 0, gf = 0, ga = 0;
+      results.forEach(r => {
+        played++; gf += r.ourScore; ga += r.theirScore;
+        if(r.ourScore > r.theirScore) won++; else if(r.ourScore < r.theirScore) lost++; else drawn++;
+      });
+      text += `Played ${played} · Won ${won} · Drawn ${drawn} · Lost ${lost}\nGoals/points for: ${gf} · Against: ${ga}`;
+    }
+
+    text += `\n\n_Build your team on Totem_ 🏆\nhttps://totem.hyperianlabs.com/?ref=season_summary`;
+    return text;
+  }
+
+  // Gathers every guardian (with a phone and/or email on file) for every
+  // player currently in this sport + age group, across all sides — plus
+  // every coach assigned anywhere in that sport + age group (head coach and
+  // any side-specific ones). Season summaries aren't side-specific, so this
+  // deliberately isn't scoped the same way collectGuardianContacts() is.
+  function collectSeasonSummaryContacts(sportId, group){
+    const players = state.players.filter(p => p.sportId === sportId && groupsMatch(ageGroupForPlayer(p), group));
+    const coaches = state.coaches.filter(c => c.sportId === sportId && groupsMatch(c.ageGroup, group));
+
+    const whatsappContacts = players.filter(p => p.guardianPhone);
+
+    const emailSet = new Map(); // email (lowercased) -> { email, label }
+    players.forEach(p => {
+      if(p.guardianEmail){
+        const key = p.guardianEmail.toLowerCase().trim();
+        if(!emailSet.has(key)) emailSet.set(key, { email: p.guardianEmail, label: `${p.name}'s guardian` });
+      }
+    });
+    coaches.forEach(c => {
+      if(c.email){
+        const key = c.email.toLowerCase().trim();
+        if(!emailSet.has(key)) emailSet.set(key, { email: c.email, label: `${c.name} (coach)` });
+      }
+    });
+
+    return { whatsappContacts, emailContacts: Array.from(emailSet.values()) };
+  }
+
+  function openSeasonSummaryShareModal(sportId, group){
+    const { whatsappContacts, emailContacts } = collectSeasonSummaryContacts(sportId, group);
+    const message = buildSeasonSummaryText(sportId, group);
+
+    const waListEl = document.getElementById("seasonShareWhatsappList");
+    if(whatsappContacts.length === 0){
+      waListEl.innerHTML = `<div style="font-size:13px; color:var(--slate);">No guardian phone numbers on file for this age group yet.</div>`;
+    } else {
+      waListEl.innerHTML = whatsappContacts.map(p => {
+        const number = normalizePhoneForWhatsApp(p.guardianPhone);
+        if(!number) return `<div class="staff-row"><span class="staff-email">${escapeHtml(p.name)}</span><span style="font-size:11px; color:var(--clay);">Number doesn't look valid</span></div>`;
+        const url = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+        return `<div class="staff-row"><span class="staff-email">${escapeHtml(p.name)}</span><a href="${url}" target="_blank" rel="noopener" class="btn btn-primary btn-small">Send</a></div>`;
+      }).join("");
+    }
+
+    const emailListEl = document.getElementById("seasonShareEmailList");
+    const emailBtn = document.getElementById("btnSendSeasonSummaryEmail");
+    if(emailContacts.length === 0){
+      emailListEl.innerHTML = `<div style="font-size:13px; color:var(--slate);">No guardian or coach emails on file for this age group yet.</div>`;
+      emailBtn.style.display = "none";
+    } else {
+      emailListEl.innerHTML = emailContacts.map(c => `<div class="staff-row"><span class="staff-email">${escapeHtml(c.email)}</span><span class="staff-role">${escapeHtml(c.label)}</span></div>`).join("");
+      emailBtn.style.display = "";
+      emailBtn.textContent = `Email all ${emailContacts.length}`;
+      emailBtn.dataset.sportId = sportId;
+      emailBtn.dataset.group = group;
+    }
+
+    document.getElementById("seasonShareModal").classList.add("open");
+  }
+  document.getElementById("cancelSeasonShare").addEventListener("click", () => {
+    document.getElementById("seasonShareModal").classList.remove("open");
+  });
+  document.getElementById("seasonShareModal").addEventListener("click", (e) => {
+    if(e.target.id === "seasonShareModal") document.getElementById("seasonShareModal").classList.remove("open");
+  });
+  document.getElementById("btnSendSeasonSummaryEmail").addEventListener("click", async (e) => {
+    const btn = e.target;
+    if(isDemoMode){
+      showToast("This is a demo — no real email is sent.");
+      document.getElementById("seasonShareModal").classList.remove("open");
+      return;
+    }
+    const sportId = btn.dataset.sportId;
+    const group = btn.dataset.group;
+    const { emailContacts } = collectSeasonSummaryContacts(sportId, group);
+    const sport = state.sports.find(s => s.id === sportId);
+    const message = buildSeasonSummaryText(sportId, group);
+
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "Sending…";
+    try{
+      const { error } = await supabaseClient.functions.invoke("send-season-summary-email", {
+        body: {
+          recipients: emailContacts.map(c => c.email),
+          subject: `${sport.name} — ${group} season summary`,
+          message,
+          orgName: currentOrgName
+        }
+      });
+      if(error) throw error;
+      showToast(`Season summary emailed to ${emailContacts.length} recipient${emailContacts.length === 1 ? "" : "s"}.`);
+      document.getElementById("seasonShareModal").classList.remove("open");
+    }catch(err){
+      console.warn("Totem: season summary email failed —", err);
+      alert("Could not send the emails — check your Edge Function is deployed and try again.");
+    }
+    btn.disabled = false;
+    btn.textContent = originalText;
+  });
+
   function openWhatsAppShareModal(sportId, group, side, fixture){
     const contacts = collectGuardianContacts(sportId, group, side, fixture ? unavailableIdsFor(fixture.id) : null);
     const message = buildTeamSheetWhatsAppText(sportId, group, side, fixture);
@@ -3306,6 +3536,7 @@
   // (see the chat writeup for how this plugs into Supabase).
   // ---------- result notification email (real send via Edge Function) ----------
   async function notifyFixtureCoaches(sport, fixture){
+    if(isDemoMode){ showToast("This is a demo — no real email is sent."); return; }
     // Group entries by coach email so a coach covering multiple sides of
     // this fixture gets one combined email, not several separate ones.
     const byCoach = {}; // email -> { coachName, sides: [...] }
@@ -3347,6 +3578,7 @@
   }
 
   async function sendResultNotification(sport, fixture, result, warningPrefix){
+    if(isDemoMode){ showToast(`${warningPrefix || ""}Result saved. (Demo — no real email is sent.)`); return; }
     const notifyCoach = coachFor(result.sportId, result.ageGroup, result.side);
     const resultLabel = seniorSideLabel(sport, result.ageGroup, result.side) || `${result.ageGroup} ${result.side}`;
     const payload = {
@@ -3659,6 +3891,10 @@
     if(!dashboardAgeGroup){ alert("No age group selected yet — add some players first."); return; }
     printSeasonSummary(currentSport().id, dashboardAgeGroup);
   });
+  document.getElementById("btnShareSeason").addEventListener("click", () => {
+    if(!dashboardAgeGroup){ alert("No age group selected yet — add some players first."); return; }
+    openSeasonSummaryShareModal(currentSport().id, dashboardAgeGroup);
+  });
   document.getElementById("calPrev").addEventListener("click", () => { calendarDate.setMonth(calendarDate.getMonth()-1); renderCalendar(); });
   document.getElementById("calNext").addEventListener("click", () => { calendarDate.setMonth(calendarDate.getMonth()+1); renderCalendar(); });
   document.getElementById("cancelFixture").addEventListener("click", () => {
@@ -3843,6 +4079,7 @@
     const dobInp = document.getElementById("inDob");
     const vo2Inp = document.getElementById("inVo2max");
     const guardianPhoneInp = document.getElementById("inGuardianPhone");
+    const guardianEmailInp = document.getElementById("inGuardianEmail");
     const sport = currentSport();
     const isIndividual = sportType(sport) === "individual";
     const name = nameInp.value.trim();
@@ -3850,6 +4087,7 @@
     const turning = turningAgeFromBirthDate(birthDate);
     const vo2max = vo2Inp.value ? +vo2Inp.value : null;
     const guardianPhone = guardianPhoneInp.value.trim() || null;
+    const guardianEmail = guardianEmailInp.value.trim() || null;
 
     let positions;
     if(isIndividual){
@@ -3869,10 +4107,10 @@
     state.players.push({
       id: uid(),
       sportId: state.activeSport,
-      name, birthDate, positions, vo2max, guardianPhone,
+      name, birthDate, positions, vo2max, guardianPhone, guardianEmail,
       metrics
     });
-    nameInp.value = ""; dobInp.value = ""; vo2Inp.value = ""; guardianPhoneInp.value = "";
+    nameInp.value = ""; dobInp.value = ""; vo2Inp.value = ""; guardianPhoneInp.value = ""; guardianEmailInp.value = "";
     document.querySelectorAll("#inPositionsMulti input:checked").forEach(i => i.checked = false);
     document.getElementById("inPositionsMulti").classList.remove("open");
     updateEventsToggleLabel();
